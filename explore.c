@@ -1,8 +1,12 @@
 #include <explore.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "motors.h"
 
 //-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
+static float distance_cm = 0;
+
+
 static struct position_direction{
 
 	uint8_t current_position [2];
@@ -99,6 +103,17 @@ void go_round_the_inside(void){
 
 
 	}
+
+	float get_distance_cm(void){
+	uint16_t i= 0;
+	++i;
+	distance_cm = 5;
+	if (i==2){
+		distance_cm+=5;
+		i=0;
+	}
+	return distance_cm;
+}
 
 
 

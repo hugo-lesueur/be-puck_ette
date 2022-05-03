@@ -20,6 +20,11 @@
 #include "react.h"
 #include "trouble.h"
 
+#include "pi_regulator.h"
+
+
+
+
 //uncomment to send the FFTs results from the real microphones
 //#define SEND_FROM_MIC
 
@@ -69,6 +74,9 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
+
+    //stars the threads for the pi regulator
+    pi_regulator_start();
 
     //temp tab used to store values in complex_float format
     //needed bx doFFT_c

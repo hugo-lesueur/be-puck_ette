@@ -13,9 +13,10 @@ CSRC += ./main.c \
 		./audio_processing.c \
 		./communications.c \
 		./fft.c \
-		./Trouble.c \
-		./React.c \
-		./Explore.c \
+		./trouble.c \
+		./react.c \
+		./explore.c \
+		./pi_regulator.c \
 
 #Header folders to include
 INCDIR += 
