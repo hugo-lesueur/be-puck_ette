@@ -3,9 +3,14 @@
 #include <stdlib.h>
 #include "motors.h"
 
-//-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
-static float distance_cm = 0;
+#define PI                  3.1415926536f
+//TO ADJUST IF NECESSARY. NOT ALL THE E-PUCK2 HAVE EXACTLY THE SAME WHEEL DISTANCE
+#define WHEEL_DISTANCE      5.35f    //cm
+#define PERIMETER_EPUCK     (PI * WHEEL_DISTANCE)
 
+
+//-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
+static float distance_cm = 5;
 
 static struct position_direction{
 
@@ -17,9 +22,9 @@ static struct position_direction{
 														//:1 is turned right, -1 is left, 2 is back
 	enum {
 		UP=1,
-		DOWN=2,
-		RIGHT=3,
-		LEFT=4
+		DOWN=3,
+		RIGHT=4,
+		LEFT=2
 
 	}desired_direction, current_direction;
 
@@ -104,17 +109,35 @@ void go_round_the_inside(void){
 
 	}
 
-	float get_distance_cm(void){
-	uint16_t i= 0;
-	++i;
-	distance_cm = 5;
-	if (i==2){
+float get_distance_cm(void){
+
+	return distance_cm;
+}
+
+float get_goal_distance(){
+	if ((position_direction.current_direction==1) || (position_direction.current_direction==3)){
 		distance_cm+=5;
-		i=0;
 	}
 	return distance_cm;
 }
 
+void change_direction(void){
+	++position_direction.current_direction;
+	if(position_direction.current_direction ==5){
+		position_direction.current_direction=1;
+	}
+}
+
+void moove_forward_turn(void){
+	//move 20cm forward at 5cm/s
+	get_goal_distance();
+    motor_set_position(distance_cm, distance_cm, 5, 5);
+    while(motor_position_reached() != POSITION_REACHED);
+    //counterclockwise rotation of 90°
+    motor_set_position(PERIMETER_EPUCK/4, PERIMETER_EPUCK/4, 5, -5);
+    while(motor_position_reached() != POSITION_REACHED);
+    change_direction();
+}
 
 
 
