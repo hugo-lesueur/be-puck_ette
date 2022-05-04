@@ -1,7 +1,7 @@
 #include <explore.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "motors.h"
+#include <motor.h>
 
 #define PI                  3.1415926536f
 //TO ADJUST IF NECESSARY. NOT ALL THE E-PUCK2 HAVE EXACTLY THE SAME WHEEL DISTANCE
