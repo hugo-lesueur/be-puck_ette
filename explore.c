@@ -11,6 +11,9 @@ static float distance_cm = 5;
 
 static struct position_direction{
 
+//	uint8_t position[2] = {0, 0};
+
+
 	uint8_t current_position [2];
 	uint8_t way_ahead_state;
 	uint8_t way_right_side_state;
@@ -73,6 +76,7 @@ static THD_FUNCTION(ObstacleInspector, arg) {
 
     	switch(position_direction.way_ahead_state){
     	case FREE:
+    		position_direction.status=CRUISING;
     		break;
     	case JAMMED:
     		position_direction.status=AVOIDING; 										//commenter quand on aura les micros+les scénarios de faits
@@ -121,9 +125,6 @@ void run_away(void){
 	//aller au centre, on sait que c'est [0,0]
 }
 void go_round_the_inside(void){////////////////faire ça////////424242424242
-
-	move_turn(90,3);//pas sûr de dans quel signe faut donner, à voir, ça doit se voir avec la fonction easy
-	move_forward(3,5);
 	while(position_direction.status==AVOIDING){
 		is_there_obstacle_right_side();
 		if(position_direction.way_right_side_state){
@@ -185,11 +186,12 @@ void move_turn(float angle, float speed)//je pense c'est OK
 	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
 
-	 while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN))
-	    	&& (abs(right_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN))) {
+	 while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))
+	    	&& (abs(right_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))) {
 		}
 	 halt();
 	position_direction.action=1;
+	change_direction();
 }
 
 
@@ -202,22 +204,37 @@ void move_forward(float distance, float speed)
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	while ((right_motor_get_pos() < distance* 1000 / WHEEL_PERIMETER)
+	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER)
 														&&(position_direction.status==CRUISING)){
 
 	}
+	halt();
 	if(position_direction.status==AVOIDING){
+		update_coordinate(right_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 		go_round_the_inside();
 	}
 	else{
-		position_direction.action=2;
+		position_direction.action=TURNING;
+		update_coordinate(distance);
 	}
-	halt();
+
 }
 
 void halt (void){
 	left_motor_set_speed(0);
 	right_motor_set_speed(0);
+}
+
+void update_coordinate (float distance){
+	//coordony update
+	if (position_direction.current_direction==UP)
+		position_direction.current_position[1] +=distance;
+	if (position_direction.current_direction==DOWN)
+			position_direction.current_position[1] -=distance;
+	if (position_direction.current_direction==RIGHT)
+			position_direction.current_position[0] +=distance;
+	if (position_direction.current_direction==LEFT)
+			position_direction.current_position[0] -=distance;
 }
 
 

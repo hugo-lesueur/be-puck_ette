@@ -9,6 +9,7 @@
 #define RIGHT_SIDE        1
 #define LEFT_SIDE         6
 #define OBSTACLE_DISTANCE 300
+#define CORRECTION_FACTOR           1.27    // correct the angle of rotation to be more precise
 
 //TO ADJUST IF NECESSARY. NOT ALL THE E-PUCK2 HAVE EXACTLY THE SAME WHEEL DISTANCE
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]
@@ -31,6 +32,7 @@ void moove_forward_turn(void);
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l);
 void halt (void);
 void move_forward(float distance, float speed);
+void update_coordinate (float distance);
 
 void move_turn(float position, float speed);
 
