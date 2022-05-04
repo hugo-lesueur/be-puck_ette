@@ -20,7 +20,17 @@
 #include "react.h"
 #include "trouble.h"
 
-#include "pi_regulator.h"
+
+#include <leds.h>
+
+#include "sdio.h"
+
+#include "sensors/proximity.h"
+messagebus_t bus;
+MUTEX_DECL(bus_lock);
+CONDVAR_DECL(bus_condvar);
+#include "spi_comm.h"
+#include "usbcfg.h"
 
 
 
@@ -65,6 +75,8 @@ int main(void)
     halInit();
     chSysInit();
     mpu_init();
+    proximity_start();
+    messagebus_init(&bus, &bus_lock, &bus_condvar);
 
     //starts the serial communication
     serial_start();
@@ -74,13 +86,10 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
+    Move_start();
     while(1){
-    	 move_turn(90,5);
-    	 chThdSleepMilliseconds(1000);
-    	 move_turn(90,-5);
-    	 chThdSleepMilliseconds(1000);
-    }
 
+    }
 //
 //    //stars the threads for the pi regulator
 //    //pi_regulator_start();

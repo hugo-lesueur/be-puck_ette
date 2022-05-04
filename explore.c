@@ -54,7 +54,7 @@ static THD_FUNCTION(Move, arg) {
     	if (position_direction.action==FORWARD)
     		move_forward(get_goal_distance(), 5);
     	else
-    		move_turn(90,3);//presque sûr que /4 et pas /2, /2 c'est faire demi tour
+    		move_turn(90,3);
     	break;
     	}
 }
@@ -111,7 +111,8 @@ void is_there_obstacle_right_side(void){
 		else {
 			position_direction.way_right_side_state=JAMMED;
 		}
-	}
+}
+
 void is_there_obstacle_left_side(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if (get_prox(LEFT_SIDE) > OBSTACLE_DISTANCE) {
@@ -121,9 +122,36 @@ void is_there_obstacle_left_side(void){
 			position_direction.way_left_side_state=JAMMED;
 		}
 	}
-void run_away(void){
-	//aller au centre, on sait que c'est [0,0]
+
+
+void run_away(void){ //retourner en zone "sure"
+
 }
+
+
+void find_home (void){ //calcul de l'argument mais angle par rapport a l'axe positif des x et donc pas l'angle a appliquer...
+	float angle_RTH = 0;
+	if (position_direction.current_position[0]>0)
+		angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI;
+	if (position_direction.current_position[0]<0 && position_direction.current_position[1]>0)
+		angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI + PI;
+	if (position_direction.current_position[0]<0 && position_direction.current_position[1]<0)
+			angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI - PI;
+}
+
+
+void rotate_right_direction(void){
+	if (position_direction.current_direction==UP)
+			position_direction.current_position[1] +=distance;
+	if (position_direction.current_direction==DOWN)
+			position_direction.current_position[1] -=distance;
+	if (position_direction.current_direction==RIGHT)
+			position_direction.current_position[0] +=distance;
+	if (position_direction.current_direction==LEFT)
+			position_direction.current_position[0] -=distance;
+}
+
+
 void go_round_the_inside(void){////////////////faire ça////////424242424242
 	while(position_direction.status==AVOIDING){
 		is_there_obstacle_right_side();
@@ -147,11 +175,6 @@ void go_round_the_inside(void){////////////////faire ça////////424242424242
 	}
 }
 
-float get_distance_cm(void){
-
-	return distance_cm;
-}
-
 float get_goal_distance(){
 	if ((position_direction.current_direction==UP) || (position_direction.current_direction==RIGHT)){
 		distance_cm+=5;
@@ -164,17 +187,6 @@ void change_direction(void){
 	if(position_direction.current_direction ==5){
 		position_direction.current_direction=1;
 	}
-}
-
-void moove_forward_turn(void){ //inutile?
-//	//move 20cm forward at 5cm/s
-//	get_goal_distance();
-//    motor_set_position(distance_cm, distance_cm, 5, 5);
-//    //while(motor_position_reached() != POSITION_REACHED);
-//    //counterclockwise rotation of 90Â°
-//    motor_set_position(PERIMETER_EPUCK/4, PERIMETER_EPUCK/4, 5, -5);
-//    //while(motor_position_reached() != POSITION_REACHED);
-//    change_direction();
 }
 
 void move_turn(float angle, float speed)//je pense c'est OK
@@ -197,7 +209,7 @@ void move_turn(float angle, float speed)//je pense c'est OK
 
 void move_forward(float distance, float speed)
 {
-
+    position_direction.status==AVOIDING;
 	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
