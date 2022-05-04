@@ -76,7 +76,7 @@ int main(void)
     motors_init();
 
     //stars the threads for the pi regulator
-    pi_regulator_start();
+    //pi_regulator_start();
 
     //temp tab used to store values in complex_float format
     //needed bx doFFT_c
@@ -117,7 +117,7 @@ int main(void)
             /*
             *   Optimized FFT
             */
-            
+
             chSysLock();
             //reset the timer counter
             GPTD12.tim->CNT = 0;
@@ -150,7 +150,7 @@ int main(void)
 
             // time_fft = GPTD12.tim->CNT;
             // chSysUnlock();
-            
+
             // //reconverts the result into a float buffer
             // for(uint16_t i = 0 ; i < (2*FFT_SIZE) ; i+=2){
             //     bufferCmplxInput[i] = temp_tab[i/2].real;

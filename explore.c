@@ -1,12 +1,8 @@
 #include <explore.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <motor.h>
+#include "motors.h"
 
-#define PI                  3.1415926536f
-//TO ADJUST IF NECESSARY. NOT ALL THE E-PUCK2 HAVE EXACTLY THE SAME WHEEL DISTANCE
-#define WHEEL_DISTANCE      5.35f    //cm
-#define PERIMETER_EPUCK     (PI * WHEEL_DISTANCE)
 
 
 //-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
@@ -28,11 +24,46 @@ static struct position_direction{
 
 	}desired_direction, current_direction;
 
+	enum {
+		CRUISING=1,
+		AVOIDING=2
+
+	}status;
+
+	enum{
+		FORWARD=1,
+		TURNING=2
+	}action;
+
+
 }position_direction;
 //-----------------------------------------------THREADS--------------------------------------------------------------------
 
 
+static THD_WORKING_AREA(waMove, 256);
+static THD_FUNCTION(Move, arg) {
 
+    chRegSetThreadName(__FUNCTION__);
+    (void)arg;
+
+    while(1){
+    	if (position_direction.action==1)
+    		move_forward(get_goal_distance(), 5);
+    	else
+    		move_turn(PERIMETER_EPUCK/2,3);
+    	break;
+    	}
+}
+
+
+void Move_start(void){
+	chThdCreateStatic(waMove, sizeof(waMove), NORMALPRIO, Move, NULL);
+}
+
+
+
+
+static THD_WORKING_AREA(waObstacleInspector, 256);
 static THD_FUNCTION(ObstacleInspector, arg) {
 
     chRegSetThreadName(__FUNCTION__);
@@ -53,6 +84,11 @@ static THD_FUNCTION(ObstacleInspector, arg) {
 
     }
 }
+
+void ObstacleInspector_start(void){
+	chThdCreateStatic(waObstacleInspector, sizeof(waObstacleInspector), NORMALPRIO, ObstacleInspector, NULL);
+}
+
 //-----------------------------------------------INTERNAL FUNCTIONS---------------------------------------------------------
 void is_there_obstacle_ahead(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
@@ -132,13 +168,65 @@ void moove_forward_turn(void){
 	//move 20cm forward at 5cm/s
 	get_goal_distance();
     motor_set_position(distance_cm, distance_cm, 5, 5);
-    while(motor_position_reached() != POSITION_REACHED);
+    //while(motor_position_reached() != POSITION_REACHED);
     //counterclockwise rotation of 90Â°
     motor_set_position(PERIMETER_EPUCK/4, PERIMETER_EPUCK/4, 5, -5);
-    while(motor_position_reached() != POSITION_REACHED);
+    //while(motor_position_reached() != POSITION_REACHED);
     change_direction();
 }
 
+void move_turn(float angle, float speed)
+{
+	left_motor_set_pos(0);
+	right_motor_set_pos(0);
 
+	right_motor_set_speed(-speed * 1000 / WHEEL_PERIMETER);
+	left_motor_set_speed(speed * 1000 / WHEEL_PERIMETER);
+
+
+//	 while ((abs(left_motor_get_pos()) < abs((angle/360)*1000))
+//	    	&& (abs(right_motor_get_pos()) < abs((angle/360)*1000))) {
+//		}
+//	 halt();
+	position_direction.action=1;
+}
+
+
+void move_forward(float distance, float speed)
+{
+	//reinit global variable
+	//right_motor.count = 0;
+	//left_motor.count = 0;
+
+	//transform the speed from cm/s into step/s
+	right_motor_set_speed(speed * 1000 / WHEEL_PERIMETER);
+	left_motor_set_speed(speed * 1000 / WHEEL_PERIMETER);
+
+	left_motor_set_pos(0);
+	right_motor_set_pos(0);
+
+    //position_right_reached = 0;
+    //position_left_reached = 0;
+
+	//Set global variable with position to reach in step
+	//left_motor_set_pos(distance * 1000 / WHEEL_PERIMETER);
+	//right_motor_set_pos(-distance * 1000 / WHEEL_PERIMETER);
+
+	//motor_set_speed(speed_r, speed_l);
+
+
+
+	//flag for position control, will erase flag for speed control only
+	//state_motor = POSITION_CONTROL;
+	while (right_motor_get_pos() < distance* 1000 / WHEEL_PERIMETER) {
+	}
+	halt();
+	position_direction.action=2;
+}
+
+void halt (void){
+	left_motor_set_speed(0);
+	right_motor_set_speed(0);
+}
 
 
