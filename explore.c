@@ -122,27 +122,29 @@ void run_away(void){
 }
 void go_round_the_inside(void){////////////////faire ça////////424242424242
 
-	/*tourner de 90 degrés vers la gauche
-	avancer d'une certaine distance
-	while(on n'est pas revenus){
-	is_there_obstacle_right_side();
-	if(position_direction.way_right_side_state){
-	tourner de 90 degrés;
-	avancer de x;
+	move_turn(90,3);//pas sûr de dans quel signe faut donner, à voir, ça doit se voir avec la fonction easy
+	move_forward(3,5);
+	while(position_direction.status==AVOIDING){
+		is_there_obstacle_right_side();
+		if(position_direction.way_right_side_state){
+			move_turn(-90,3);
+			move_forward(3,5);
+			continue;
+		}
+		is_there_obstacle_ahead();
+		if(position_direction.way_ahead_state){
+			move_forward(3,5);
+			continue;
+		}
+		is_there_obstacle_left_side();
+		if(position_direction.way_left_side_state){
+			move_turn(90,3);
+			move_forward(3,5);
+			continue;
+		}
+		move_turn(180,3);
 	}
-	continue;
-	is_there_obstacle_ahead();
-	if(position_direction.way_ahead_state){
-	avancer de x;
-	}
-	continue;
-	is_there_obstacle_left_side();
-	if(position_direction.way_left_side_state){
-	tourner de 90 degrés
-	avancer de x}*/
-
-
-	}
+}
 
 float get_distance_cm(void){
 
