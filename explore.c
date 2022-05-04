@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "motors.h"
+#include "sensors/proximity.h"
 
 
 
@@ -47,10 +48,10 @@ static THD_FUNCTION(Move, arg) {
     (void)arg;
 
     while(1){
-    	if (position_direction.action==1)
+    	if (position_direction.action==FORWARD)
     		move_forward(get_goal_distance(), 5);
     	else
-    		move_turn(PERIMETER_EPUCK/2,3);
+    		move_turn(90,3);//presque sûr que /4 et pas /2, /2 c'est faire demi tour
     	break;
     	}
 }
@@ -59,8 +60,6 @@ static THD_FUNCTION(Move, arg) {
 void Move_start(void){
 	chThdCreateStatic(waMove, sizeof(waMove), NORMALPRIO, Move, NULL);
 }
-
-
 
 
 static THD_WORKING_AREA(waObstacleInspector, 256);
@@ -74,11 +73,11 @@ static THD_FUNCTION(ObstacleInspector, arg) {
 
     	switch(position_direction.way_ahead_state){
     	case FREE:
-    		break;//continue d'avancer, mais en vrai il faudrait faire qq chose pour voir que c'est OK
-    	case JAMMED:
-    		//test_call();
-    		run_away(); 										//commenter quand on aura les micros+les scénarios de faits
     		break;
+    	case JAMMED:
+    		position_direction.status=AVOIDING; 										//commenter quand on aura les micros+les scénarios de faits
+    		break;
+//sempahore ici pour dire ok, le mouvement peut avoir lieu?
 
     	}
 
@@ -121,7 +120,7 @@ void is_there_obstacle_left_side(void){
 void run_away(void){
 	//aller au centre, on sait que c'est [0,0]
 }
-void go_round_the_inside(void){
+void go_round_the_inside(void){////////////////faire ça////////424242424242
 
 	/*tourner de 90 degrés vers la gauche
 	avancer d'une certaine distance
@@ -151,7 +150,7 @@ float get_distance_cm(void){
 }
 
 float get_goal_distance(){
-	if ((position_direction.current_direction==1) || (position_direction.current_direction==3)){
+	if ((position_direction.current_direction==UP) || (position_direction.current_direction==RIGHT)){
 		distance_cm+=5;
 	}
 	return distance_cm;
@@ -164,64 +163,54 @@ void change_direction(void){
 	}
 }
 
-void moove_forward_turn(void){
-	//move 20cm forward at 5cm/s
-	get_goal_distance();
-    motor_set_position(distance_cm, distance_cm, 5, 5);
-    //while(motor_position_reached() != POSITION_REACHED);
-    //counterclockwise rotation of 90Â°
-    motor_set_position(PERIMETER_EPUCK/4, PERIMETER_EPUCK/4, 5, -5);
-    //while(motor_position_reached() != POSITION_REACHED);
-    change_direction();
+void moove_forward_turn(void){ //inutile?
+//	//move 20cm forward at 5cm/s
+//	get_goal_distance();
+//    motor_set_position(distance_cm, distance_cm, 5, 5);
+//    //while(motor_position_reached() != POSITION_REACHED);
+//    //counterclockwise rotation of 90Â°
+//    motor_set_position(PERIMETER_EPUCK/4, PERIMETER_EPUCK/4, 5, -5);
+//    //while(motor_position_reached() != POSITION_REACHED);
+//    change_direction();
 }
 
-void move_turn(float angle, float speed)
+void move_turn(float angle, float speed)//je pense c'est OK
 {
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	right_motor_set_speed(-speed * 1000 / WHEEL_PERIMETER);
-	left_motor_set_speed(speed * 1000 / WHEEL_PERIMETER);
+	right_motor_set_speed(-speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
 
-//	 while ((abs(left_motor_get_pos()) < abs((angle/360)*1000))
-//	    	&& (abs(right_motor_get_pos()) < abs((angle/360)*1000))) {
-//		}
-//	 halt();
+	 while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN))
+	    	&& (abs(right_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN))) {
+		}
+	 halt();
 	position_direction.action=1;
 }
 
 
 void move_forward(float distance, float speed)
 {
-	//reinit global variable
-	//right_motor.count = 0;
-	//left_motor.count = 0;
 
-	//transform the speed from cm/s into step/s
-	right_motor_set_speed(speed * 1000 / WHEEL_PERIMETER);
-	left_motor_set_speed(speed * 1000 / WHEEL_PERIMETER);
+	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-    //position_right_reached = 0;
-    //position_left_reached = 0;
+	while ((right_motor_get_pos() < distance* 1000 / WHEEL_PERIMETER)
+														&&(position_direction.status==CRUISING)){
 
-	//Set global variable with position to reach in step
-	//left_motor_set_pos(distance * 1000 / WHEEL_PERIMETER);
-	//right_motor_set_pos(-distance * 1000 / WHEEL_PERIMETER);
-
-	//motor_set_speed(speed_r, speed_l);
-
-
-
-	//flag for position control, will erase flag for speed control only
-	//state_motor = POSITION_CONTROL;
-	while (right_motor_get_pos() < distance* 1000 / WHEEL_PERIMETER) {
+	}
+	if(position_direction.status==AVOIDING){
+		go_round_the_inside();
+	}
+	else{
+		position_direction.action=2;
 	}
 	halt();
-	position_direction.action=2;
 }
 
 void halt (void){
