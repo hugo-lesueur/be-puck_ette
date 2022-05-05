@@ -1,7 +1,7 @@
 #ifndef EXPLORE_H
 #define EXPLORE_H
-
-
+#define FALSE             0
+#define TRUE              1
 #define JAMMED		      0
 #define FREE              1
 #define FRONT_LEFT        7
@@ -37,6 +37,8 @@ void halt (void);
 void move_forward(float distance, float speed);
 void update_coordinate (float distance);
 void move_turn(float position, float speed);
+void save_data_prior_avoiding (void);
+int avoiding_done(void);
 
 
 #endif /* EXPLORE_H*/

@@ -24,6 +24,9 @@ static struct position_direction{
 	uint8_t way_left_side_state;
 	uint8_t orientation_realtive_direction;				//represents the difference between direction and orientation
 														//:1 is turned right, -1 is left, 2 is back
+	uint8_t x_prior_avoiding;
+	uint8_t y_prior_avoiding;
+	uint8_t direction_prior_avoiding;
 	enum {
 		UP=1,
 		DOWN=3,
@@ -78,7 +81,6 @@ static THD_FUNCTION(ObstacleInspector, arg) {
 
     	switch(position_direction.way_ahead_state){
     	case FREE:
-    		//position_direction.status=CRUISING; doit pas etre la, devrait commencer tho, remis apres evitement
     		position_direction.action=FORWARD;
 
     		break;
@@ -148,8 +150,9 @@ void rotate_right_direction(void){
 }
 
 
-void go_round_the_inside(void){////////////////faire ça////////424242424242
-	while(position_direction.status==AVOIDING){
+void go_round_the_inside(void){
+	save_data_prior_avoiding();
+	while(position_direction.status==AVOIDING &&(!avoiding_done())){
 		is_there_obstacle_right_side();
 		if(position_direction.way_right_side_state==1){
 			move_turn(90,3);
@@ -169,6 +172,7 @@ void go_round_the_inside(void){////////////////faire ça////////424242424242
 		}
 		move_turn(180,3);
 	}
+	position_direction.status=CRUISING;
 }
 
 float get_goal_distance(){
@@ -206,11 +210,11 @@ void move_turn(float angle, float speed)//je pense c'est OK
 void move_forward(float distance, float speed)
 {
     //position_direction.status==AVOIDING;
-	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
-	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
-
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
+
+	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
 	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER)
 														&&(position_direction.status==CRUISING)){
@@ -220,6 +224,7 @@ void move_forward(float distance, float speed)
 	if(position_direction.status==AVOIDING){
 		update_coordinate(right_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 		go_round_the_inside();
+		return;
 	}
 	else{
 		position_direction.action=TURNING;
@@ -249,5 +254,58 @@ void update_coordinate (float distance){
 void init_position_direction(void){
 	position_direction.current_direction=UP;
 	position_direction.status=CRUISING;
+	position_direction.current_position[0]=0;
+	position_direction.current_position[1]=0;
 
+
+}
+void save_data_prior_avoiding (void){
+	if((position_direction.current_direction==UP)||(position_direction.current_direction==DOWN)){
+		position_direction.x_prior_avoiding=position_direction.current_position[0];
+		position_direction.y_prior_avoiding=127;
+	}
+	else{
+		position_direction.y_prior_avoiding=position_direction.current_position[1];
+		position_direction.x_prior_avoiding=127;
+	}
+	position_direction.direction_prior_avoiding=position_direction.current_direction;
+
+
+}
+int avoiding_done(void){
+	//de retour sur le bon x/y et la bonne position
+	uint8_t done;
+	uint8_t half_done;
+	if((position_direction.x_prior_avoiding==127)&&
+			(position_direction.y_prior_avoiding=position_direction.current_position[1])){
+		half_done=1;
+	}
+	if((position_direction.y_prior_avoiding==127)&&
+				(position_direction.x_prior_avoiding=position_direction.current_position[0])){
+			half_done=1;
+		}
+	switch(position_direction.direction_prior_avoiding){
+	case UP :
+		if((position_direction.current_direction==RIGHT)&&(half_done)){
+			done=1;
+		}
+		break;
+	case DOWN:
+		if((position_direction.current_direction==LEFT)&&(half_done)){
+					done=1;
+				}
+		break;
+	case LEFT :
+		if((position_direction.current_direction==UP)&&(half_done)){
+					done=1;
+				}
+		break;
+	case RIGHT:
+		if((position_direction.current_direction==DOWN)&&(half_done)){
+					done=1;
+				}
+		break;
+
+	}
+	return done;
 }
