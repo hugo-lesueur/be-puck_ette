@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "motors.h"
 #include "sensors/proximity.h"
+#include <math.h>
+#include "arm_math.h"
 
 
 
@@ -134,22 +136,14 @@ void find_home (void){ //calcul de l'argument mais angle par rapport a l'axe pos
 	float angle_RTH = 0;
 	if (position_direction.current_position[0]>0)
 		angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI;
-	if (position_direction.current_position[0]<0 && position_direction.current_position[1]>0)
+	if ((position_direction.current_position[0]<0) && (position_direction.current_position[1]>0))
 		angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI + PI;
-	if (position_direction.current_position[0]<0 && position_direction.current_position[1]<0)
+	if ((position_direction.current_position[0]<0) && (position_direction.current_position[1]<0))
 			angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI - PI;
 }
 
 
 void rotate_right_direction(void){
-	if (position_direction.current_direction==UP)
-			position_direction.current_position[1] +=distance;
-	if (position_direction.current_direction==DOWN)
-			position_direction.current_position[1] -=distance;
-	if (position_direction.current_direction==RIGHT)
-			position_direction.current_position[0] +=distance;
-	if (position_direction.current_direction==LEFT)
-			position_direction.current_position[0] -=distance;
 }
 
 
@@ -210,7 +204,7 @@ void move_turn(float angle, float speed)//je pense c'est OK
 
 void move_forward(float distance, float speed)
 {
-    position_direction.status==AVOIDING;
+    //position_direction.status==AVOIDING;
 	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
