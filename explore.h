@@ -9,7 +9,7 @@
 #define RIGHT_SIDE        1
 #define LEFT_SIDE         6
 #define OBSTACLE_DISTANCE 300
-#define CORRECTION_FACTOR           1.31    // correct the angle of rotation to be more precise
+#define CORRECTION_FACTOR           1.29    // correct the angle of rotation to be more precise
 
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]
 #define PERIMETER_EPUCK   (PI * WHEEL_AXIS_WIDTH)

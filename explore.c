@@ -5,6 +5,7 @@
 #include "sensors/proximity.h"
 #include <math.h>
 #include "arm_math.h"
+#include "leds.h"
 
 
 
@@ -58,7 +59,6 @@ static THD_FUNCTION(Move, arg) {
     		move_forward(get_goal_distance(), 5);
     	else
     		move_turn(90,3);
-    	break;
     	}
 }
 
@@ -66,7 +66,6 @@ static THD_FUNCTION(Move, arg) {
 void Move_start(void){
 	chThdCreateStatic(waMove, sizeof(waMove), NORMALPRIO, Move, NULL);
 }
-
 
 static THD_WORKING_AREA(waObstacleInspector, 256);
 static THD_FUNCTION(ObstacleInspector, arg) {
@@ -79,13 +78,14 @@ static THD_FUNCTION(ObstacleInspector, arg) {
 
     	switch(position_direction.way_ahead_state){
     	case FREE:
-    		position_direction.status=CRUISING;
+    		//position_direction.status=CRUISING; doit pas etre la, devrait commencer tho, remis apres evitement
+    		position_direction.action=FORWARD;
+
     		break;
     	case JAMMED:
-    		position_direction.status=AVOIDING; 										//commenter quand on aura les micros+les scénarios de faits
+    		position_direction.status=AVOIDING;
+    		position_direction.action=TURNING;
     		break;
-//sempahore ici pour dire ok, le mouvement peut avoir lieu?
-
     	}
 
     }
@@ -100,29 +100,30 @@ void is_there_obstacle_ahead(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if ((get_prox(FRONT_LEFT) > OBSTACLE_DISTANCE) ||
 		    (get_prox(FRONT_RIGHT) > OBSTACLE_DISTANCE)) {
-		 position_direction.way_ahead_state=FREE;
+		 position_direction.way_ahead_state=JAMMED;
+
 	    }
 		else {
-			position_direction.way_ahead_state=JAMMED;
+			position_direction.way_ahead_state=FREE;
 		}
 	}
 void is_there_obstacle_right_side(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if (get_prox(RIGHT_SIDE) > OBSTACLE_DISTANCE) {
-		 position_direction.way_right_side_state=FREE;
+		 position_direction.way_right_side_state=JAMMED;
 	    }
 		else {
-			position_direction.way_right_side_state=JAMMED;
+			position_direction.way_right_side_state=FREE;
 		}
 }
 
 void is_there_obstacle_left_side(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if (get_prox(LEFT_SIDE) > OBSTACLE_DISTANCE) {
-		 position_direction.way_left_side_state=FREE;
+		 position_direction.way_left_side_state=JAMMED;
 	    }
 		else {
-			position_direction.way_left_side_state=JAMMED;
+			position_direction.way_left_side_state=FREE;
 		}
 	}
 
@@ -150,19 +151,19 @@ void rotate_right_direction(void){
 void go_round_the_inside(void){////////////////faire ça////////424242424242
 	while(position_direction.status==AVOIDING){
 		is_there_obstacle_right_side();
-		if(position_direction.way_right_side_state){
-			move_turn(-90,3);
+		if(position_direction.way_right_side_state==1){
+			move_turn(90,3);
 			move_forward(3,5);
 			continue;
 		}
 		is_there_obstacle_ahead();
-		if(position_direction.way_ahead_state){
+		if(position_direction.way_ahead_state==1){
 			move_forward(3,5);
 			continue;
 		}
 		is_there_obstacle_left_side();
-		if(position_direction.way_left_side_state){
-			move_turn(90,3);
+		if(position_direction.way_left_side_state==1){
+			move_turn(90,-3);
 			move_forward(3,5);
 			continue;
 		}
@@ -189,15 +190,15 @@ void move_turn(float angle, float speed)//je pense c'est OK
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 
-	right_motor_set_speed(-speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
-	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	left_motor_set_speed(-speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
 
 	 while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))
 	    	&& (abs(right_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))) {
 		}
 	 halt();
-	position_direction.action=1;
+	position_direction.action=FORWARD;
 	change_direction();
 }
 
@@ -245,3 +246,8 @@ void update_coordinate (float distance){
 }
 
 
+void init_position_direction(void){
+	position_direction.current_direction=UP;
+	position_direction.status=CRUISING;
+
+}

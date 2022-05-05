@@ -86,6 +86,8 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
+    //Move_start();
+    ObstacleInspector_start();
     Move_start();
     while(1){
 
