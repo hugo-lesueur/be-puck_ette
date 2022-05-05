@@ -13,7 +13,7 @@ static struct position_direction{
 
 //	uint8_t position[2] = {0, 0};
 
-
+//asdfsadfsadf
 
 	uint8_t current_position [2];
 	uint8_t way_ahead_state;
