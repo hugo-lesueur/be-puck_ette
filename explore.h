@@ -20,6 +20,7 @@
 //---------------------------------Initialisation Threads---------------------------------------------
 void Move_start(void);
 void ObstacleInspector_start(void);
+void init_position_direction(void);
 
 //---------------------------------Detection---------------------------------------------
 void is_there_obstacle_ahead(void);
@@ -27,7 +28,7 @@ void is_there_obstacle_right_side(void);
 void is_there_obstacle_left_side(void);
 
 
-//---------------------------------Mouvement---------------------------------------------
+//---------------------------------Movement---------------------------------------------
 void go_round_the_inside(void);
 void run_away(void);
 float get_goal_distance(void);
@@ -37,6 +38,9 @@ void halt (void);
 void move_forward(float distance, float speed);
 void update_coordinate (float distance);
 void move_turn(float position, float speed);
+void motor_reboot(void);
+void move(float speed);
+void avoid_obstacle(void);
 
 
 #endif /* EXPLORE_H*/

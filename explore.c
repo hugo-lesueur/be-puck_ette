@@ -20,12 +20,19 @@ static struct position_direction{
 	uint8_t way_left_side_state;
 	uint8_t orientation_realtive_direction;				//represents the difference between direction and orientation
 														//:1 is turned right, -1 is left, 2 is back
+	uint8_t eloignement; //distance de l'eloignement par rapport a la traj prevue
+
 	enum {
 		UP=1,
 		LEFT=2,
 		DOWN=3,
 		RIGHT=4
 	}desired_direction, current_direction;
+
+	enum {
+		ON=1,
+		OFF=0
+	}track;
 
 	enum {
 		CRUISING=1,
@@ -115,6 +122,7 @@ void is_there_obstacle_right_side(void){
 		}
 }
 
+
 void is_there_obstacle_left_side(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if (get_prox(LEFT_SIDE) > OBSTACLE_DISTANCE) {
@@ -145,39 +153,44 @@ void find_home (void){ //calcul de l'argument mais angle par rapport a l'axe pos
 void rotate_right_direction(void){
 }
 
-void find_free_direction(void){ //find the right direction without blocus
-	if(get_prox(RIGHT_SIDE)>get_prox(LEFT_SIDE)){
+void go_round_the_inside(void){		//avoid obstacle
+	position_direction.status=AVOIDING;   //not on track
 
+	is_there_obstacle_left_side();
+	if(position_direction.way_left_side_state==1){
+		position_direction.desired_direction=LEFT;
+		move_turn(90,-3);
+		avoid_obstacle();
+//		move_forward(3,5);
+		return;
+	}
+	is_there_obstacle_right_side();
+	if(position_direction.way_right_side_state==1){
+		position_direction.desired_direction=RIGHT;
+		move_turn(90,3);
+		avoid_obstacle();
+//		move_forward(3,5);
+		return;
+	}
+	is_there_obstacle_ahead();
+	if(position_direction.way_ahead_state==1){
+		move_forward(3,5);
+		return;
 	}
 }
 
-void go_round_the_inside(void){		////////////////faire ça////////424242424242
-	find_free_direction();
+void avoid_obstacle(void){
+	if(position_direction.desired_direction==RIGHT){
+		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
+			uint32_t save= left_motor_get_pos();
+			motor_reboot();
+			move(3);
+		}
+	}
+	else{
 
-
-
-//	while(position_direction.status==AVOIDING){
-//		is_there_obstacle_right_side();
-//		if(position_direction.way_right_side_state==1){
-//			move_turn(90,3);
-//			move_forward(3,5);
-//			continue;
-//		}
-//		is_there_obstacle_ahead();
-//		if(position_direction.way_ahead_state==1){
-//			move_forward(3,5);
-//			continue;
-//		}
-//		is_there_obstacle_left_side();
-//		if(position_direction.way_left_side_state==1){
-//			move_turn(90,-3);
-//			move_forward(3,5);
-//			continue;
-//		}
-//		move_turn(180,3);
-//	}
+	}
 }
-
 
 
 float get_goal_distance(){
@@ -190,9 +203,17 @@ float get_goal_distance(){
 
 
 void change_direction(void){
-	++position_direction.current_direction;
-	if(position_direction.current_direction ==5){
-		position_direction.current_direction=1;
+	if (position_direction.desired_direction==LEFT){
+		++position_direction.current_direction;
+		if(position_direction.current_direction ==5){
+			position_direction.current_direction=1;
+		}
+	}
+	if (position_direction.desired_direction==RIGHT){
+		--position_direction.current_direction;
+		if(position_direction.current_direction ==0){
+			position_direction.current_direction=4;
+		}
 	}
 }
 
@@ -200,12 +221,9 @@ void change_direction(void){
 
 void move_turn(float angle, float speed)//je pense c'est OK
 {
-	left_motor_set_pos(0);
-	right_motor_set_pos(0);
+	motor_reboot();
 
-	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
-	left_motor_set_speed(-speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
-
+	move(speed);
 
 	 while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))
 	    	&& (abs(right_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))) {
@@ -215,15 +233,22 @@ void move_turn(float angle, float speed)//je pense c'est OK
 	change_direction();
 }
 
+void move(float speed){
+	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+}
+
+void motor_reboot(void){
+	left_motor_set_pos(0);
+	right_motor_set_pos(0);
+}
 
 void move_forward(float distance, float speed)
 {
     //position_direction.status==CRUISING;
-	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
-	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
+	move(speed);
 
-	left_motor_set_pos(0);
-	right_motor_set_pos(0);
+	motor_reboot();
 
 	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER)
 														&&(position_direction.status==CRUISING)){
@@ -262,4 +287,5 @@ void update_coordinate (float distance){
 void init_position_direction(void){
 	position_direction.current_direction=UP;
 	position_direction.status=CRUISING;
+	return;
 }
