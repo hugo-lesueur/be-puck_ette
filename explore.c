@@ -14,10 +14,6 @@ static float distance_cm = 5;
 
 static struct position_direction{
 
-//	uint8_t position[2] = {0, 0};
-
-//asdfsadfsadf
-
 	uint8_t current_position [2];
 	uint8_t way_ahead_state;
 	uint8_t way_right_side_state;
@@ -26,23 +22,20 @@ static struct position_direction{
 														//:1 is turned right, -1 is left, 2 is back
 	enum {
 		UP=1,
+		LEFT=2,
 		DOWN=3,
-		RIGHT=4,
-		LEFT=2
-
+		RIGHT=4
 	}desired_direction, current_direction;
 
 	enum {
 		CRUISING=1,
 		AVOIDING=2
-
 	}status;
 
 	enum{
 		FORWARD=1,
 		TURNING=2
 	}action;
-
 
 }position_direction;
 //-----------------------------------------------THREADS--------------------------------------------------------------------
@@ -55,17 +48,20 @@ static THD_FUNCTION(Move, arg) {
     (void)arg;
 
     while(1){
-    	if (position_direction.action==FORWARD)
-    		move_forward(get_goal_distance(), 5);
-    	else
-    		move_turn(90,3);
+    	if (position_direction.action==FORWARD){
+    		move_forward(get_goal_distance(), 10);
+    	}
+    	else{
+    		move_turn(90,5);
+    	}
     	}
 }
-
 
 void Move_start(void){
 	chThdCreateStatic(waMove, sizeof(waMove), NORMALPRIO, Move, NULL);
 }
+
+
 
 static THD_WORKING_AREA(waObstacleInspector, 256);
 static THD_FUNCTION(ObstacleInspector, arg) {
@@ -96,17 +92,19 @@ void ObstacleInspector_start(void){
 }
 
 //-----------------------------------------------INTERNAL FUNCTIONS---------------------------------------------------------
+
 void is_there_obstacle_ahead(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if ((get_prox(FRONT_LEFT) > OBSTACLE_DISTANCE) ||
 		    (get_prox(FRONT_RIGHT) > OBSTACLE_DISTANCE)) {
 		 position_direction.way_ahead_state=JAMMED;
-
 	    }
 		else {
 			position_direction.way_ahead_state=FREE;
 		}
 	}
+
+
 void is_there_obstacle_right_side(void){
 	//lit les distances et dit si devant on a quelque chose à 2cm, et change la valeur de position_direction.way_ahead_state
 	 if (get_prox(RIGHT_SIDE) > OBSTACLE_DISTANCE) {
@@ -147,36 +145,49 @@ void find_home (void){ //calcul de l'argument mais angle par rapport a l'axe pos
 void rotate_right_direction(void){
 }
 
+void find_free_direction(void){ //find the right direction without blocus
+	if(get_prox(RIGHT_SIDE)>get_prox(LEFT_SIDE)){
 
-void go_round_the_inside(void){////////////////faire ça////////424242424242
-	while(position_direction.status==AVOIDING){
-		is_there_obstacle_right_side();
-		if(position_direction.way_right_side_state==1){
-			move_turn(90,3);
-			move_forward(3,5);
-			continue;
-		}
-		is_there_obstacle_ahead();
-		if(position_direction.way_ahead_state==1){
-			move_forward(3,5);
-			continue;
-		}
-		is_there_obstacle_left_side();
-		if(position_direction.way_left_side_state==1){
-			move_turn(90,-3);
-			move_forward(3,5);
-			continue;
-		}
-		move_turn(180,3);
 	}
 }
 
+void go_round_the_inside(void){		////////////////faire ça////////424242424242
+	find_free_direction();
+
+
+
+//	while(position_direction.status==AVOIDING){
+//		is_there_obstacle_right_side();
+//		if(position_direction.way_right_side_state==1){
+//			move_turn(90,3);
+//			move_forward(3,5);
+//			continue;
+//		}
+//		is_there_obstacle_ahead();
+//		if(position_direction.way_ahead_state==1){
+//			move_forward(3,5);
+//			continue;
+//		}
+//		is_there_obstacle_left_side();
+//		if(position_direction.way_left_side_state==1){
+//			move_turn(90,-3);
+//			move_forward(3,5);
+//			continue;
+//		}
+//		move_turn(180,3);
+//	}
+}
+
+
+
 float get_goal_distance(){
-	if ((position_direction.current_direction==UP) || (position_direction.current_direction==RIGHT)){
+	if ((position_direction.current_direction==UP) || (position_direction.current_direction==DOWN)){
 		distance_cm+=5;
 	}
 	return distance_cm;
 }
+
+
 
 void change_direction(void){
 	++position_direction.current_direction;
@@ -184,6 +195,8 @@ void change_direction(void){
 		position_direction.current_direction=1;
 	}
 }
+
+
 
 void move_turn(float angle, float speed)//je pense c'est OK
 {
@@ -205,7 +218,7 @@ void move_turn(float angle, float speed)//je pense c'est OK
 
 void move_forward(float distance, float speed)
 {
-    //position_direction.status==AVOIDING;
+    //position_direction.status==CRUISING;
 	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
@@ -234,7 +247,7 @@ void halt (void){
 }
 
 void update_coordinate (float distance){
-	//coordony update
+	//coordoninate update
 	if (position_direction.current_direction==UP)
 		position_direction.current_position[1] +=distance;
 	if (position_direction.current_direction==DOWN)
@@ -249,5 +262,4 @@ void update_coordinate (float distance){
 void init_position_direction(void){
 	position_direction.current_direction=UP;
 	position_direction.status=CRUISING;
-
 }

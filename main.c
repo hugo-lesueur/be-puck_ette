@@ -86,15 +86,16 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
-    //Move_start();
+
+
     ObstacleInspector_start();
+    init_position_direction();
     Move_start();
+
+
     while(1){
 
     }
-//
-//    //stars the threads for the pi regulator
-//    //pi_regulator_start();
 //
 //    //temp tab used to store values in complex_float format
 //    //needed bx doFFT_c
