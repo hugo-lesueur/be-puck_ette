@@ -43,4 +43,8 @@ void move(float speed);
 void avoid_obstacle(void);
 
 
+//---------------------------------------LEDs--------------------------------------------
+void led_update(void);
+
+
 #endif /* EXPLORE_H*/

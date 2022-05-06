@@ -186,7 +186,7 @@ void go_round_the_inside(void){		//avoid obstacle
 void avoid_obstacle(void){
 	if(position_direction.desired_direction==RIGHT){
 		motor_reboot();
-		uint32_t save;
+		uint32_t save=0;
 		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
 			save= left_motor_get_pos(); //retiens distance d'eloignement
 			move(3);
