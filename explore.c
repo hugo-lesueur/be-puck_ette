@@ -9,6 +9,10 @@
 
 
 
+//-------------------------SEMAPHORE---------------------------------
+static BSEMAPHORE_DECL(no_obstacle_sem, TRUE);
+static BSEMAPHORE_DECL(goal_not_reached_sem, FALSE); //FALSE so MovementControl can start first
+
 //-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
 static float distance_cm = 5;
 
@@ -36,7 +40,8 @@ static struct position_direction{
 
 	enum {
 		CRUISING=1,
-		AVOIDING=2
+		AVOIDING=2,
+		FUITE=3
 	}status;
 
 	enum{
@@ -55,13 +60,17 @@ static THD_FUNCTION(Move, arg) {
     (void)arg;
 
     while(1){
-    	if (position_direction.action==FORWARD){
-    		move_forward(get_goal_distance(), 10);
+    	led_update();
+    	if (position_direction.status==CRUISING){
+			if (position_direction.action==FORWARD){
+				move_forward(get_goal_distance(), 10);
+			}
+			else{
+				move_turn(90,5);
+			}
     	}
-    	else{
-    		move_turn(90,5);
-    	}
-    	}
+    	else go_round_the_inside();
+    }
 }
 
 void Move_start(void){
@@ -87,7 +96,7 @@ static THD_FUNCTION(ObstacleInspector, arg) {
     		break;
     	case JAMMED:
     		position_direction.status=AVOIDING;
-    		position_direction.action=TURNING;
+    		//position_direction.action=TURNING;
     		break;
     	}
 
@@ -141,12 +150,7 @@ void run_away(void){ //retourner en zone "sure"
 
 void find_home (void){ //calcul de l'argument mais angle par rapport a l'axe positif des x et donc pas l'angle a appliquer...
 	float angle_RTH = 0;
-	if (position_direction.current_position[0]>0)
-		angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI;
-	if ((position_direction.current_position[0]<0) && (position_direction.current_position[1]>0))
-		angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI + PI;
-	if ((position_direction.current_position[0]<0) && (position_direction.current_position[1]<0))
-			angle_RTH= atan2 (position_direction.current_position[1],position_direction.current_position[0]) * 180 / PI - PI;
+
 }
 
 
@@ -181,17 +185,52 @@ void go_round_the_inside(void){		//avoid obstacle
 
 void avoid_obstacle(void){
 	if(position_direction.desired_direction==RIGHT){
+		motor_reboot();
+		uint32_t save;
 		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
-			uint32_t save= left_motor_get_pos();
-			motor_reboot();
+			save= left_motor_get_pos(); //retiens distance d'eloignement
 			move(3);
 		}
+		move_forward(5,3); //advance to not hit the wall
+		move_turn(90,-3);
+//-----------------------side--------------------------------------
+		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
+			move(3);
+		}
+		move_forward(5,3); //advance to not hit the wall
+		move_turn(90,-3);
+//----------------comeback on right track--------------------------
+		move_forward(save* STEPS_WHEEL_TURN / WHEEL_PERIMETER,3);
+		move_turn(90,3);
+		position_direction.status=CRUISING;
 	}
-	else{
 
+
+	if(position_direction.desired_direction==LEFT){
+		motor_reboot();
+		uint32_t save=0;
+		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
+			save= left_motor_get_pos(); //retiens distance d'eloignement
+			move(3);
+		}
+		change_direction();
+		move_forward(5,3); //advance to not hit the wall
+		move_turn(90,3);
+//-----------------------side--------------------------------------
+		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
+			move(3);
+		}
+		move_forward(5,3); //advance to not hit the wall
+		move_turn(90,3);
+		change_direction();
+//----------------comeback on right track--------------------------
+		move_forward(save* STEPS_WHEEL_TURN / WHEEL_PERIMETER,3);
+		move_turn(90,-3);
+		position_direction.status=CRUISING;
+		position_direction.desired_direction=RIGHT;
+		change_direction();
 	}
 }
-
 
 float get_goal_distance(){
 	if ((position_direction.current_direction==UP) || (position_direction.current_direction==DOWN)){
@@ -238,7 +277,7 @@ void move(float speed){
 	left_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 }
 
-void motor_reboot(void){
+void motor_reboot(void){ //pos=0
 	left_motor_set_pos(0);
 	right_motor_set_pos(0);
 }
@@ -255,14 +294,14 @@ void move_forward(float distance, float speed)
 
 	}
 	halt();
-	if(position_direction.status==AVOIDING){
-		update_coordinate(right_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
-		go_round_the_inside();
-	}
-	else{
+//	if(position_direction.status==AVOIDING){
+//		update_coordinate(right_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
+//		go_round_the_inside();
+//	}
+//	else{
 		position_direction.action=TURNING;
 		update_coordinate(distance);
-	}
+//	}
 
 }
 
@@ -283,6 +322,26 @@ void update_coordinate (float distance){
 			position_direction.current_position[0] -=distance;
 }
 
+void led_update(void){
+	if (position_direction.status==CRUISING) {
+		set_rgb_led(LED2,0,100,0);
+		set_rgb_led(LED3,0,100,0);
+		set_rgb_led(LED4,0,100,0);
+		set_rgb_led(LED5,0,100,0);
+	}
+	if (position_direction.status==AVOIDING) {
+		set_rgb_led(LED2,100,50,0);
+		set_rgb_led(LED3,100,50,0);
+		set_rgb_led(LED4,100,50,0);
+		set_rgb_led(LED5,100,50,0);
+	}
+	if (position_direction.status==FUITE) {
+		set_rgb_led(LED2,100,0,0);
+		set_rgb_led(LED3,100,0,0);
+		set_rgb_led(LED4,100,0,0);
+		set_rgb_led(LED5,100,0,0);
+	}
+}
 
 void init_position_direction(void){
 	position_direction.current_direction=UP;
