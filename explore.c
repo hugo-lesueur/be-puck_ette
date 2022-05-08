@@ -298,7 +298,7 @@ void move_forward(float distance, float speed)
 
 	move(speed);
 
-	while (right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER){
+	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
 
 	}
 	halt();
