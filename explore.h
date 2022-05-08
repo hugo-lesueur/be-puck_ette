@@ -11,6 +11,7 @@
 #define OBSTACLE_DISTANCE 300
 #define CORRECTION_FACTOR 1.29    // correct the angle of rotation to be more precise
 
+
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]
 #define PERIMETER_EPUCK   (PI * WHEEL_AXIS_WIDTH)
 #define WHEEL_PERIMETER   13                     // [cm]
@@ -31,7 +32,7 @@ void is_there_obstacle_left_side(void);
 
 //---------------------------------Movement---------------------------------------------
 void go_round_the_inside(void);
-void run_away(void);
+void RTH(void);
 float get_goal_distance(void);
 void change_direction(void);
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l);
@@ -42,7 +43,8 @@ void move_turn(float position, float speed);
 void motor_reboot(void);
 void move(float speed);
 void avoid_obstacle(void);
-
+void rotate_right_direction_y(void);
+void rotate_right_direction_x(void);
 
 //---------------------------------------LEDs--------------------------------------------
 void led_update(void);

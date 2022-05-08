@@ -72,7 +72,7 @@ static THD_FUNCTION(Move, arg) {
 			}
     	}
     	if (position_direction.status==AVOIDING) go_round_the_inside();
-    	if (position_direction.status==FUITE) run_away();
+    	if (position_direction.status==FUITE) RTH();
     }
 }
 
@@ -146,19 +146,51 @@ void is_there_obstacle_left_side(void){
 	}
 
 
-void run_away(void){ //retourner en zone "sure"
+void RTH(void){ //retourner en zone "sure"
+	rotate_right_direction_y();
+	move_forward(position_direction.current_position[1],9);
+	rotate_right_direction_x();
+	move_forward(position_direction.current_position[0],9);
+	chThdSleepSeconds(2); // repos du guerrier
+	position_direction.status=CRUISING;
 	return;
 }
 
 
-void find_home (void){ //calcul de l'argument mais angle par rapport a l'axe positif des x et donc pas l'angle a appliquer...
-	//float angle_RTH = 0;
-	return;
+
+void rotate_right_direction_y(void){
+	if (position_direction.current_position[0]>0){
+		if(position_direction.current_direction==UP)move_turn(180,6);
+		if(position_direction.current_direction==LEFT)move_turn(90,6);
+		if(position_direction.current_direction==RIGHT)move_turn(90,-6);
+		position_direction.current_direction=DOWN;
+		return;
+	}
+	if (position_direction.current_position[0]<=0){
+		if(position_direction.current_direction==DOWN)move_turn(180,6);
+		if(position_direction.current_direction==LEFT)move_turn(90,-6);
+		if(position_direction.current_direction==RIGHT)move_turn(90,6);
+		position_direction.current_direction=UP;
+		return;
+	}
 }
 
 
-void rotate_right_direction(void){
+void rotate_right_direction_x(void){
+	if (position_direction.current_position[1]>0){
+		if(position_direction.current_direction==UP)move_turn(90,6);
+		else move_turn(90,-6);
+		position_direction.current_direction=LEFT;
+		return;
+	}
+	else{
+		if(position_direction.current_direction==UP)move_turn(90,-6);
+		else move_turn(90,6);
+		position_direction.current_direction=RIGHT;
+		return;
+	}
 }
+
 
 void go_round_the_inside(void){		//avoid obstacle
 	position_direction.status=AVOIDING;   //not on track
@@ -185,6 +217,7 @@ void go_round_the_inside(void){		//avoid obstacle
 }
 
 void avoid_obstacle(void){
+//------------------------right side-------------------------
 	if(position_direction.desired_direction==RIGHT){
 		motor_reboot();
 		move_turn(90,-6);
@@ -210,7 +243,7 @@ void avoid_obstacle(void){
 		change_direction();
 
 //----------------comeback on right track--------------------------
-		move_forward(position_direction.eloignement* STEPS_WHEEL_TURN / WHEEL_PERIMETER,3);
+		move_forward(position_direction.eloignement* STEPS_WHEEL_TURN / WHEEL_PERIMETER,6);
 		move_turn(90,-6);
 		position_direction.futur_direction=RIGHT;
 		change_direction();
@@ -281,7 +314,7 @@ void change_direction(void){
 
 
 
-void move_turn(float angle, float speed)//je pense c'est OK
+void move_turn(float angle, float speed)// speed > 0 --> left,  speed <0 --> right
 {
 	motor_reboot();
 
@@ -367,6 +400,6 @@ void led_update(void){
 void init_position_direction(void){
 	position_direction.current_direction=UP;
 	position_direction.status=CRUISING;
-	position_direction.action==FORWARD;
+	position_direction.action=FORWARD;
 	return;
 }
