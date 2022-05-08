@@ -9,13 +9,14 @@
 #define RIGHT_SIDE        1
 #define LEFT_SIDE         6
 #define OBSTACLE_DISTANCE 300
-#define CORRECTION_FACTOR           1.29    // correct the angle of rotation to be more precise
+#define CORRECTION_FACTOR 1.29    // correct the angle of rotation to be more precise
 
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]
 #define PERIMETER_EPUCK   (PI * WHEEL_AXIS_WIDTH)
 #define WHEEL_PERIMETER   13                     // [cm]
-#define FULL_TURN_DEGREES 360.0f                   // degrees for a whole revolution
+#define FULL_TURN_DEGREES 360.0f                 // degrees for a whole revolution
 #define STEPS_WHEEL_TURN  1000					 //number of steps per wheel revolution
+#define EPUCK_RADIUS      4     				 //cm
 
 //---------------------------------Initialisation Threads---------------------------------------------
 void Move_start(void);

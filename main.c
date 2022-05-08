@@ -71,12 +71,10 @@ static void timer12_start(void){
 
 int main(void)
 {
-
     halInit();
     chSysInit();
-    mpu_init();
     proximity_start();
-    spi_comm_start();
+    //spi_comm_start();
     messagebus_init(&bus, &bus_lock, &bus_condvar);
 
     //starts the serial communication
@@ -95,7 +93,7 @@ int main(void)
 
 
     while(1){
-
+//    	chThdSleepSeconds(1);
     }
 //
 //    //temp tab used to store values in complex_float format
