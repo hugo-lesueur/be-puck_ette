@@ -187,34 +187,46 @@ void go_round_the_inside(void){		//avoid obstacle
 void avoid_obstacle(void){
 	if(position_direction.desired_direction==RIGHT){
 		motor_reboot();
+		move_turn(90,-6);
+		position_direction.futur_direction=RIGHT;
+		change_direction();
 		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
 			position_direction.eloignement= left_motor_get_pos(); //retiens distance d'eloignement
 			move(6);
 		}
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
-		move_turn(90,-6);
+		move_turn(90,6);
 		position_direction.futur_direction=LEFT;
 		change_direction();
+		move_forward(EPUCK_RADIUS,6); //advance to detect smth
 //-----------------------side--------------------------------------
 		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
 			move(6);
 		}
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
-		move_turn(90,-6);
+		move_turn(90,6);
+		move_forward(EPUCK_RADIUS,6); //advance to detect smth
 		position_direction.futur_direction=LEFT;
 		change_direction();
 
 //----------------comeback on right track--------------------------
 		move_forward(position_direction.eloignement* STEPS_WHEEL_TURN / WHEEL_PERIMETER,3);
-		move_turn(90,6);
+		move_turn(90,-6);
 		position_direction.futur_direction=RIGHT;
 		change_direction();
 		position_direction.status=CRUISING;
 	}
 
 
+
+//--------------------------------LEFT SIDE-------------------------------------------
 	if(position_direction.desired_direction==LEFT){
 		motor_reboot();
+		move_turn(90,6);
+		position_direction.futur_direction=LEFT;
+		change_direction();
+
+//-------------------------first slide------------------------------
 		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
 			position_direction.eloignement= left_motor_get_pos(); //retiens distance d'eloignement
 			move(6);
@@ -223,21 +235,23 @@ void avoid_obstacle(void){
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
 		position_direction.futur_direction=RIGHT;
 		change_direction();
-		move_turn(90,6);
+		move_turn(90,-6);
+		move_forward(EPUCK_RADIUS,6); //advance to detect smth
 //-----------------------side--------------------------------------
-		while(get_prox(LEFT_SIDE)>OBSTACLE_DISTANCE){
+		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
 			move(6);
 		}
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
-		move_turn(90,6);
+		move_turn(90,-6);
 		position_direction.futur_direction=RIGHT;
 		change_direction();
+		move_forward(EPUCK_RADIUS,6); //advance to detect smth
 //----------------comeback on right track--------------------------
 		move_forward(position_direction.eloignement* STEPS_WHEEL_TURN / WHEEL_PERIMETER,3);
-		move_turn(90,-6);
-		position_direction.status=CRUISING;
+		move_turn(90,6);
 		position_direction.futur_direction=LEFT;
 		change_direction();
+		position_direction.status=CRUISING;
 	}
 }
 

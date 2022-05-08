@@ -6,8 +6,8 @@
 #define FREE              1
 #define FRONT_LEFT        7
 #define FRONT_RIGHT       0
-#define RIGHT_SIDE        1
-#define LEFT_SIDE         6
+#define RIGHT_SIDE        2
+#define LEFT_SIDE         5
 #define OBSTACLE_DISTANCE 300
 #define CORRECTION_FACTOR 1.29    // correct the angle of rotation to be more precise
 
