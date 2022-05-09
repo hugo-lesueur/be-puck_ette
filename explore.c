@@ -24,7 +24,7 @@ static struct position_direction{
 	uint8_t way_left_side_state;
 	uint8_t orientation_realtive_direction;				//represents the difference between direction and orientation
 														//:1 is turned right, -1 is left, 2 is back
-	uint8_t eloignement; //distance de l'eloignement par rapport a la traj prevue
+	uint32_t eloignement; //distance de l'eloignement par rapport a la traj prevue
 
 	enum {
 		UP=1,
@@ -201,14 +201,14 @@ void go_round_the_inside(void){		//avoid obstacle
 		avoid_obstacle();
 //		move_forward(3,5);
 		return;
-	}
+	}//utile?
 	is_there_obstacle_right_side();
 	if(position_direction.way_right_side_state==1){
 		position_direction.desired_direction=RIGHT;
 		avoid_obstacle();
 //		move_forward(3,5);
 		return;
-	}
+	}//pour quoi?
 	is_there_obstacle_ahead();
 	if(position_direction.way_ahead_state==1){
 		move_forward(3,5);
@@ -243,35 +243,40 @@ void avoid_obstacle(void){
 		change_direction();
 
 //----------------comeback on right track--------------------------
+		set_led(LED7,100);
 		move_forward(position_direction.eloignement* STEPS_WHEEL_TURN / WHEEL_PERIMETER,6);
 		move_turn(90,-6);
 		position_direction.futur_direction=RIGHT;
 		change_direction();
 		position_direction.status=CRUISING;
+
 	}
 
 
 
 //--------------------------------LEFT SIDE-------------------------------------------
 	if(position_direction.desired_direction==LEFT){
-		motor_reboot();
 		move_turn(90,6);
+		motor_reboot();
 		position_direction.futur_direction=LEFT;
 		change_direction();
 
 //-------------------------first slide------------------------------
 		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
-			position_direction.eloignement= left_motor_get_pos(); //retiens distance d'eloignement
 			move(6);
+		}
+		position_direction.eloignement= left_motor_get_pos(); //retient distance d'eloignement
+		if(position_direction.eloignement==0){
+			set_led(LED1,100);
 		}
 		change_direction();
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
 		position_direction.futur_direction=RIGHT;
 		change_direction();
 		move_turn(90,-6);
-		move_forward(EPUCK_RADIUS,6); //advance to detect smth
+		move_forward(EPUCK_RADIUS*2,6); //advance to detect smth
 //-----------------------side--------------------------------------
-		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
+		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE/2){
 			move(6);
 		}
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
@@ -280,11 +285,14 @@ void avoid_obstacle(void){
 		change_direction();
 		move_forward(EPUCK_RADIUS,6); //advance to detect smth
 //----------------comeback on right track--------------------------
-		move_forward(position_direction.eloignement* STEPS_WHEEL_TURN / WHEEL_PERIMETER,3);
+		set_led(LED7,100);
+		move_forward(position_direction.eloignement*WHEEL_PERIMETER*CORRECTION_FORWARD/STEPS_WHEEL_TURN ,6);
 		move_turn(90,6);
 		position_direction.futur_direction=LEFT;
 		change_direction();
 		position_direction.status=CRUISING;
+		position_direction.eloignement=0;
+		clear_leds();
 	}
 }
 
@@ -321,10 +329,10 @@ void move_turn(float angle, float speed)// speed > 0 --> left,  speed <0 --> rig
 	right_motor_set_speed(speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 	left_motor_set_speed(-speed * STEPS_WHEEL_TURN / WHEEL_PERIMETER);
 
-	 while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))
+	while ((abs(left_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))
 	    	&& (abs(right_motor_get_pos()) < abs((angle/FULL_TURN_DEGREES)*STEPS_WHEEL_TURN*CORRECTION_FACTOR))) {
 		}
-	 halt();
+	halt();
 	position_direction.action=FORWARD;
 	change_direction();
 }

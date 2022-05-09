@@ -88,8 +88,7 @@ int main(void)
 
 
     ObstacleInspector_start();
-    init_position_direction();
-    Move_start();
+    init_position_direction();    Move_start();
 
 
     while(1){
