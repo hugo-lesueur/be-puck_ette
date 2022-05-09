@@ -6,20 +6,24 @@
 #define FREE              1
 #define FRONT_LEFT        7
 #define FRONT_RIGHT       0
-#define RIGHT_SIDE        1
-#define LEFT_SIDE         6
+#define RIGHT_SIDE        2
+#define LEFT_SIDE         5
 #define OBSTACLE_DISTANCE 300
-#define CORRECTION_FACTOR           1.29    // correct the angle of rotation to be more precise
+#define CORRECTION_FACTOR 1.29    // correct the angle of rotation to be more precise
+#define CORRECTION_FORWARD 0.95  //correct the distance
+
 
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]
 #define PERIMETER_EPUCK   (PI * WHEEL_AXIS_WIDTH)
 #define WHEEL_PERIMETER   13                     // [cm]
-#define FULL_TURN_DEGREES 360.0f                   // degrees for a whole revolution
+#define FULL_TURN_DEGREES 360.0f                 // degrees for a whole revolution
 #define STEPS_WHEEL_TURN  1000					 //number of steps per wheel revolution
+#define EPUCK_RADIUS      4     				 //cm
 
 //---------------------------------Initialisation Threads---------------------------------------------
 void Move_start(void);
 void ObstacleInspector_start(void);
+void init_position_direction(void);
 
 //---------------------------------Detection---------------------------------------------
 void is_there_obstacle_ahead(void);
@@ -27,9 +31,9 @@ void is_there_obstacle_right_side(void);
 void is_there_obstacle_left_side(void);
 
 
-//---------------------------------Mouvement---------------------------------------------
+//---------------------------------Movement---------------------------------------------
 void go_round_the_inside(void);
-void run_away(void);
+void RTH(void);
 float get_goal_distance(void);
 void change_direction(void);
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l);
@@ -37,8 +41,14 @@ void halt (void);
 void move_forward(float distance, float speed);
 void update_coordinate (float distance);
 void move_turn(float position, float speed);
-void save_data_prior_avoiding (void);
-int avoiding_done(void);
+void motor_reboot(void);
+void move(float speed);
+void avoid_obstacle(void);
+void rotate_right_direction_y(void);
+void rotate_right_direction_x(void);
+
+//---------------------------------------LEDs--------------------------------------------
+void led_update(void);
 
 
 #endif /* EXPLORE_H*/

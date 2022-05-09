@@ -71,11 +71,10 @@ static void timer12_start(void){
 
 int main(void)
 {
-
     halInit();
     chSysInit();
-    mpu_init();
     proximity_start();
+    //spi_comm_start();
     messagebus_init(&bus, &bus_lock, &bus_condvar);
 
     //starts the serial communication
