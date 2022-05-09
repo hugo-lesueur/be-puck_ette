@@ -11,7 +11,7 @@
 #include <motors.h>
 #include <audio/microphone.h>
 
-#include <audio_processing.h>
+#include <react.h>
 #include <fft.h>
 #include <communications.h>
 #include <arm_math.h>
@@ -85,8 +85,9 @@ int main(void)
     timer12_start();
     //inits the motors
     motors_init();
-   //Move_start();
-    //ObstacleInspector_start();
+    Move_start();
+    ObstacleInspector_start();
+    init_position_direction();
     //LookoutDanger_start();
 
 
