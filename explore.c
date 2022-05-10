@@ -10,8 +10,8 @@
 
 
 //-------------------------SEMAPHORE---------------------------------
-static BSEMAPHORE_DECL(no_obstacle_sem, TRUE);
-static BSEMAPHORE_DECL(goal_not_reached_sem, FALSE); //FALSE so MovementControl can start first
+
+
 
 //-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
 static float distance_cm = 5;
@@ -39,9 +39,13 @@ static struct position_direction{
 	}track;
 
 	enum {
+		YES=1,
+		NO=0
+	}fuite;
+
+	enum {
 		CRUISING=1,
 		AVOIDING=2,
-		FUITE=3
 	}status;
 
 	enum{
@@ -61,7 +65,7 @@ static THD_FUNCTION(Move, arg) {
 
     while(1){
     	led_update();
-    	if (position_direction.status==CRUISING){
+    	if ((position_direction.status==CRUISING) &&(position_direction.fuite==NO)){
 			if (position_direction.action==FORWARD){
 				move_forward(get_goal_distance(), 10);
 				position_direction.action=TURNING;
@@ -71,8 +75,8 @@ static THD_FUNCTION(Move, arg) {
 				position_direction.action=CRUISING;
 			}
     	}
-    	if (position_direction.status==AVOIDING) go_round_the_inside();
-    	if (position_direction.status==FUITE) RTH();
+    	if(position_direction.status==AVOIDING) go_round_the_inside();
+    	if (position_direction.fuite==YES) RTH();
     }
 }
 
@@ -152,7 +156,7 @@ void RTH(void){ //retourner en zone "sure"
 	rotate_right_direction_x();
 	move_forward(position_direction.current_position[0],9);
 	chThdSleepSeconds(2); // repos du guerrier
-	position_direction.status=CRUISING;
+	position_direction.fuite=NO;
 	return;
 }
 
@@ -386,7 +390,7 @@ void update_coordinate (float distance){
 }
 
 void led_update(void){
-	if (position_direction.status==CRUISING) {
+	if ((position_direction.status==CRUISING) &&(position_direction.fuite==NO)) {
 		set_rgb_led(LED2,0,100,0);
 		set_rgb_led(LED3,0,100,0);
 		set_rgb_led(LED4,0,100,0);
@@ -398,7 +402,7 @@ void led_update(void){
 		set_rgb_led(LED4,100,50,0);
 		set_rgb_led(LED5,100,50,0);
 	}
-	if (position_direction.status==FUITE) {
+	if (position_direction.fuite==YES) {
 		set_rgb_led(LED2,100,0,0);
 		set_rgb_led(LED3,100,0,0);
 		set_rgb_led(LED4,100,0,0);
@@ -411,4 +415,8 @@ void init_position_direction(void){
 	position_direction.status=CRUISING;
 	position_direction.action=FORWARD;
 	return;
+}
+
+void fuite (void){
+	position_direction.fuite=YES;
 }

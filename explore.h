@@ -47,6 +47,8 @@ void avoid_obstacle(void);
 void rotate_right_direction_y(void);
 void rotate_right_direction_x(void);
 
+void fuite (void);
+
 //---------------------------------------LEDs--------------------------------------------
 void led_update(void);
 

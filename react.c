@@ -11,6 +11,7 @@
 //#include <fft.h>
 //#include <arm_math.h>
 #include "react.h"
+#include "explore.h"
 
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
@@ -28,12 +29,12 @@ static float micBack_output[FFT_SIZE];
 
 #define MIN_VALUE_THRESHOLD	10000
 
-#define MIN_FREQ		24
-#define FREQ_DANGER	26	//406Hz
-#define MAX_FREQ		28	//we don't analyze after this index to not use resources for nothing
+#define MIN_FREQ	24
+#define FREQ_DANGER	26	//406Hz ish
+#define MAX_FREQ		28 	//we don't analyze after this index to not use resources for nothing EKIP
 
-#define FREQ_DANGER_L		(FREQ_DANGER-2)
-#define FREQ_DANGER_H		(FREQ_DANGER+2)
+#define FREQ_DANGER_L		(FREQ_DANGER-1)
+#define FREQ_DANGER_H		(FREQ_DANGER+1)
 
 void sound_remote(float* data){
 	float max_norm = MIN_VALUE_THRESHOLD;
@@ -48,8 +49,9 @@ void sound_remote(float* data){
 	}
 
 	//go forward
-	if(max_norm_index >= FREQ_DANGER_L && max_norm_index <= FREQ_DANGER_H){
+	if(max_norm_index >= FREQ_DANGER_L && max_norm_index <= FREQ_DANGER_H){ // a changer quand le mic est appele
 		set_led(LED1,100);
+		//fuite();
 	}
 	else{
 		clear_leds();
