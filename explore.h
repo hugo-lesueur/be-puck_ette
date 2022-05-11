@@ -46,7 +46,7 @@ void move(float speed);
 void avoid_obstacle(void);
 void rotate_right_direction_y(void);
 void rotate_right_direction_x(void);
-
+void update_direction(void);
 void fuite (void);
 
 //---------------------------------------LEDs--------------------------------------------
