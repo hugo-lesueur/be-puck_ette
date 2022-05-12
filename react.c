@@ -1,8 +1,9 @@
-//#include "ch.h"
-//#include "hal.h"
+#include "ch.h"
+#include "hal.h"
+#include "chprintf.h"
+
 //#include <main.h>
 //#include <usbcfg.h>
-//#include <chprintf.h>
 //#include "leds.h"
 //#include <motors.h>
 //#include <audio/microphone.h>
@@ -12,6 +13,8 @@
 //#include <arm_math.h>
 #include "react.h"
 #include "explore.h"
+
+
 
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);
@@ -56,6 +59,8 @@ void sound_remote(float* data){
 }
 
 void processAudioData(int16_t *data, uint16_t num_samples){
+	chprintf((BaseSequentialStream *)&SD3, "capture_time_Start_MICRO=_%d\n",  chVTGetSystemTime());
+	//chprintf((BaseSequentialStream *)&SD3, "capture_time_=_%d\r\n",  chVTGetSystemTime()-time);
 
 	/*
 	*
@@ -127,6 +132,11 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 		sound_remote(micRight_output);
 	}
+	//chprintf((BaseSequentialStream *)&SD3, "capture_timeFIN_=_%d\r\n",  chVTGetSystemTime());
+    //chprintf((BaseSequentialStream *)&SD3, "capture_time_=_%d\r\n",  chVTGetSystemTime()-time); //
+	chprintf((BaseSequentialStream *)&SD3, "capture_time_ENd_MICRO=_%d\r\n",  chVTGetSystemTime());
+
+//	time = chVTGetSystemTime();
 }
 
 void wait_send_to_computer(void){

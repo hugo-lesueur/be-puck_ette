@@ -7,6 +7,10 @@
 #include "arm_math.h"
 #include "leds.h"
 
+#include "ch.h"
+#include "hal.h"
+#include "chprintf.h"
+
 
 
 //-------------------------SEMAPHORE---------------------------------
@@ -16,6 +20,7 @@
 //-----------------------------------------------STATIC VARIABLES-----------------------------------------------------------
 static float distance_unit = 5;
 static float distance_to_walk=0;
+systime_t time=0;
 
 
 static struct position_direction{
@@ -65,8 +70,10 @@ static THD_FUNCTION(Move, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
-
+//    systime_t time;
+//    time = chVTGetSystemTime();
     while(1){
+//    	chprintf((BaseSequentialStream *)&SD3, "capture_time_START_MOVE=_%d\r\n",  chVTGetSystemTime());
     	//led_update();
     	if ((position_direction.status==CRUISING) &&(position_direction.flee==NO)){
 			if (position_direction.action==FORWARD){
@@ -99,7 +106,9 @@ static THD_FUNCTION(Move, arg) {
     		set_led(LED7,100);
     		RTH();
     	}
+//    	chprintf((BaseSequentialStream *)&SD3, "capture_time_ENd_MOVE=_%d\r\n",  chVTGetSystemTime());
     }
+//    chprintf((BaseSequentialStream *)&SD3, "capture_time_=_%d\n",  chVTGetSystemTime()-time);
 }
 
 void Move_start(void){
@@ -108,13 +117,15 @@ void Move_start(void){
 
 
 
-static THD_WORKING_AREA(waObstacleInspector, 128);
+static THD_WORKING_AREA(waObstacleInspector, 256);
 static THD_FUNCTION(ObstacleInspector, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
     while(1){
+
+//    	chprintf((BaseSequentialStream *)&SD3, "capture_time_Start_IR=_%d\n",  chVTGetSystemTime());
     	is_there_obstacle_ahead();
 
     	switch(position_direction.way_ahead_state){
@@ -128,7 +139,7 @@ static THD_FUNCTION(ObstacleInspector, arg) {
     		//position_direction.action=TURNING;
     		break;
     	}
-
+//    	chprintf((BaseSequentialStream *)&SD3, "capture_time_ENd_IR=_%d\r\n",  chVTGetSystemTime());
     }
 }
 

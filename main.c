@@ -101,7 +101,6 @@ int main(void)
 
     mic_start(&processAudioData);
 
-
     /* Infinite loop. */
     while (1) {
 }
