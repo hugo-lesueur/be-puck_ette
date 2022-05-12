@@ -47,8 +47,8 @@ void sound_remote(float* data){
 			max_norm_index = i;
 		}
 	}
+	//chprint((BaseSequentialStream*)&SD3, "frequence=%d",i);
 
-	//go forward
 	if(max_norm_index >= FREQ_DANGER_L && max_norm_index <= FREQ_DANGER_H){ // a changer quand le mic est appele
 		set_body_led(1);
 		set_to_flee();
@@ -71,14 +71,14 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	//loop to fill the buffers
 	for(uint16_t i = 0 ; i < num_samples ; i+=4){
 		//construct an array of complex numbers. Put 0 to the imaginary part
-//		micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
+		micRight_cmplx_input[nb_samples] = (float)data[i + MIC_RIGHT];
 		micLeft_cmplx_input[nb_samples] = (float)data[i + MIC_LEFT];
 //		micBack_cmplx_input[nb_samples] = (float)data[i + MIC_BACK];
 //		micFront_cmplx_input[nb_samples] = (float)data[i + MIC_FRONT];
 
 		nb_samples++;
 
-//		micRight_cmplx_input[nb_samples] = 0;
+		micRight_cmplx_input[nb_samples] = 0;
 		micLeft_cmplx_input[nb_samples] = 0;
 //		micBack_cmplx_input[nb_samples] = 0;
 //		micFront_cmplx_input[nb_samples] = 0;
@@ -98,7 +98,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		*	This is an "In Place" function.
 		*/
 
-//		doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
+		doFFT_optimized(FFT_SIZE, micRight_cmplx_input);
 		doFFT_optimized(FFT_SIZE, micLeft_cmplx_input);
 //		doFFT_optimized(FFT_SIZE, micFront_cmplx_input);
 //		doFFT_optimized(FFT_SIZE, micBack_cmplx_input);
@@ -110,7 +110,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		*	real numbers.
 		*
 		*/
-//		arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
+		arm_cmplx_mag_f32(micRight_cmplx_input, micRight_output, FFT_SIZE);
 		arm_cmplx_mag_f32(micLeft_cmplx_input, micLeft_output, FFT_SIZE);
 //		arm_cmplx_mag_f32(micFront_cmplx_input, micFront_output, FFT_SIZE);
 //		arm_cmplx_mag_f32(micBack_cmplx_input, micBack_output, FFT_SIZE);
@@ -125,7 +125,7 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 		nb_samples = 0;
 		mustSend++;
 
-		sound_remote(micLeft_output);
+		sound_remote(micRight_output);
 	}
 }
 
