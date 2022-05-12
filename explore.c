@@ -75,10 +75,7 @@ static THD_FUNCTION(Move, arg) {
 				if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
 				if(position_direction.current_direction==LEFT){set_led(LED5,0);}
 				distance_to_walk=get_goal_distance();
-				move_forward((distance_to_walk-position_direction.progression), 10);
-//				if(distance_to_walk==40){
-//					set_to_flee();
-//				}
+				move_forward((distance_to_walk-position_direction.progression), 6);
 				position_direction.action=TURNING;
 			}
 			else if(position_direction.flee!=YES){
@@ -93,10 +90,6 @@ static THD_FUNCTION(Move, arg) {
     		go_round_the_inside();
     	}
     	if (position_direction.flee==YES){
-    		set_led(LED1,100);
-    		set_led(LED3,100);
-    		set_led(LED5,100);
-    		set_led(LED7,100);
     		RTH();
     	}
     }
@@ -174,13 +167,13 @@ void is_there_obstacle_left_side(void){
 
 void RTH(void){ //retourner en zone "sure"
 	rotate_right_direction_y();
-	move_forward(abs(position_direction.current_position[1]),10);
+	move_forward(abs(position_direction.current_position[1]),6);
 	rotate_right_direction_x();
-	move_forward(abs(position_direction.current_position[0]),10);
-	position_direction.flee=NO;
+	move_forward(abs(position_direction.current_position[0]),6);
 	clear_leds();
 	set_body_led(0);
 	init_position_direction();
+	//fonction éteindre les threads
 	return;
 }
 
@@ -234,9 +227,9 @@ void rotate_right_direction_x(void){
 }
 
 
-void go_round_the_inside(void){		//avoid obstacle
+void go_round_the_inside(void){			  //avoid obstacle
 	position_direction.status=AVOIDING;   //not on track
-	position_direction.progression=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//keep in mind what we have already parcouru so we
+	position_direction.progression=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//keep in mind what we have already walked so we
 	//don't walk it twice
 	is_there_obstacle_left_side();
 	if(position_direction.way_left_side_state==FREE){
@@ -252,7 +245,7 @@ void go_round_the_inside(void){		//avoid obstacle
 	}//pour quoi?
 	is_there_obstacle_ahead();
 	if(position_direction.way_ahead_state==FREE){
-		move_forward(3,5);
+		move_forward(3,6);
 		return;
 	}
 }
@@ -298,26 +291,36 @@ void avoid_obstacle(void){
 	if(position_direction.desired_direction==LEFT){
 		position_direction.futur_direction=LEFT;
 		//position_direction.progression=0; faut pas on doit pouvoir retirer au move_forward qui vient après avoir contourné une fois avant sur la branche si deux obstacles
-		change_direction();
-		move_turn(90,6);
+		change_direction();//ici chelou
+		move_turn(90,6);//first turn to be parallel
+					if(position_direction.current_direction==UP){set_led(LED1,100);}
+					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
+					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
+					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
 		motor_reboot();
 //-------------------------first slide------------------------------
 		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
-			move(6);
+			move(6);//get up to the end of the obstacle
 		}
 		position_direction.digression= left_motor_get_pos(); //retient distance d'eloignement
 		//change_direction(); pourquoi c'est là on n'a pas tourné?
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
 		position_direction.futur_direction=RIGHT;
 		change_direction();
-		move_turn(90,-6);
-		move_forward(EPUCK_RADIUS*2,6); //advance to detect smth
-		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;
+		move_turn(90,-6);//turn to be perpendicular to the obstacle
+					if(position_direction.current_direction==UP){set_body_led(1);}
+					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
+					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
+					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
+		move_forward(EPUCK_RADIUS*2,6); //go back up next to the obstacle
+		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//saves these 2 radii to progression
 		motor_reboot();//not to add radius*2 again//on veut garder ce qu'on a avancé pour le soustraire à la fin
 //-----------------------side--------------------------------------
+		move(6);
 		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE/2){
-			move(6);
+
 		}
+		halt();
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//juste si move fait bien compter les tours de moteur
 		move_forward(EPUCK_RADIUS,6); //advance to not hit the wall
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//maintenant on a tout ce dont on a avancé
@@ -325,18 +328,26 @@ void avoid_obstacle(void){
 		position_direction.futur_direction=RIGHT;
 		change_direction();
 		move_turn(90,-6);
+					if(position_direction.current_direction==UP){set_led(LED1,100);}
+					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
+					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
+					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
 		move_forward(EPUCK_RADIUS,6); //advance to detect smth
 //----------------comeback on right track--------------------------
 		set_led(LED7,100);
-		move_forward(position_direction.digression*WHEEL_PERIMETER*CORRECTION_FORWARD/STEPS_WHEEL_TURN ,6);
-		move_turn(90,6);
+		set_body_led(0);
+		move_forward(position_direction.digression*WHEEL_PERIMETER*CORRECTION_FORWARD/STEPS_WHEEL_TURN ,6);//this is weird
 		position_direction.futur_direction=LEFT;
 		change_direction();
+		move_turn(90,6);
+					if(position_direction.current_direction==UP){set_led(LED1,100);}
+					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
+					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
+					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
 		position_direction.status=CRUISING;
 		position_direction.digression=0;
-		clear_leds();
 	}
-	position_direction.status=CRUISING;
+
 }
 
 float get_goal_distance(){
