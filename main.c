@@ -99,12 +99,13 @@ int main(void)
     static float send_tab[FFT_SIZE];
 
 
-    //mic_start(&processAudioData);
+    mic_start(&processAudioData);
 
 
     /* Infinite loop. */
-    while (1) {
-}
+//    while (1) {
+//    	chThdSleepMilliseconds(500);
+//}
 }
 
 #define STACK_CHK_GUARD 0xe2dee396
