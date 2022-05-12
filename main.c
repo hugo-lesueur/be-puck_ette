@@ -99,7 +99,7 @@ int main(void)
     static float send_tab[FFT_SIZE];
 
 
-    //mic_start(&processAudioData);
+    mic_start(&processAudioData);
 
 
     /* Infinite loop. */

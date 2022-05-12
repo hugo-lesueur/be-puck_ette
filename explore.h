@@ -19,7 +19,8 @@
 #define FULL_TURN_DEGREES 360.0f                 // degrees for a whole revolution
 #define STEPS_WHEEL_TURN  1000					 //number of steps per wheel revolution
 #define EPUCK_RADIUS      4     				 //cm
-
+#include <stdlib.h>// aaaaaaaaaaaaaaaaaaaaaaaaattentioooooooooooooooooooooooooooooooooooooon c'est chelou de devoir faire ça nan?
+#include <stdio.h>
 //---------------------------------Initialisation Threads---------------------------------------------
 void Move_start(void);
 void ObstacleInspector_start(void);
@@ -39,7 +40,7 @@ void change_direction(void);
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l);
 void halt (void);
 void move_forward(float distance, float speed);
-void update_coordinate (float distance);
+void update_coordinate (int32_t distance);
 void move_turn(float position, float speed);
 void motor_reboot(void);
 void move(float speed);
@@ -47,7 +48,7 @@ void avoid_obstacle(void);
 void rotate_right_direction_y(void);
 void rotate_right_direction_x(void);
 void update_direction(void);
-void fuite (void);
+void set_to_flee (void);
 
 //---------------------------------------LEDs--------------------------------------------
 void led_update(void);
