@@ -440,9 +440,10 @@ void move_forward(float distance, float speed)
 
 	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING) && (position_direction.flee==NO)){
 		chThdSleepMilliseconds(10);
-		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 	}
 	halt();
+
+	update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 //	if(position_direction.status==AVOIDING){
 //		update_coordinate(right_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 //		go_round_the_inside();
