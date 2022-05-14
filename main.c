@@ -103,9 +103,9 @@ int main(void)
 
 
     /* Infinite loop. */
-//    while (1) {
-//    	chThdSleepMilliseconds(500);
-//}
+    while (1) {
+    	chThdSleepMilliseconds(500);
+}
 }
 
 #define STACK_CHK_GUARD 0xe2dee396

@@ -85,11 +85,11 @@ static THD_FUNCTION(Move, arg) {
 				position_direction.progression=0;
 			}
     	}
-    	if((position_direction.status==AVOIDING)&&(position_direction.flee==NO)) {
+    	if((position_direction.status==AVOIDING)) { //&&(position_direction.flee==NO)
     		//position_direction.progression=0; pas de sens parcequ'on a besoin des coups d'avant, au cas où y a deux obstacles sur la même branche de la spirale
     		go_round_the_inside();
     	}
-    	if (position_direction.flee==YES){
+    	if ((position_direction.flee==YES) && (position_direction.status==CRUISING)){
     		RTH();
     	}
     }
@@ -167,9 +167,22 @@ void is_there_obstacle_left_side(void){
 
 void RTH(void){ //retourner en zone "sure"
 	rotate_right_direction_y();
-	move_forward(abs(position_direction.current_position[1]),VITESSE);
+	//move_forward(abs(position_direction.current_position[1]*CORRECTION_FORWARD),VITESSE); Peut plus a cause de la condition flee==no
+	motor_reboot();
+	move(VITESSE+2);
+	while ((right_motor_get_pos() < abs(position_direction.current_position[0])) && (position_direction.status==CRUISING)){
+		chThdSleepMilliseconds(10);
+	}
+	halt();
 	rotate_right_direction_x();
-	move_forward(abs(position_direction.current_position[0]),VITESSE);
+	//move_forward(abs(position_direction.current_position[0]*CORRECTION_FORWARD),VITESSE);
+
+	motor_reboot();
+	move(VITESSE+2);
+	while ((right_motor_get_pos() < abs(position_direction.current_position[1])) && (position_direction.status==CRUISING)){
+		chThdSleepMilliseconds(10);
+	}
+	halt();
 	clear_leds();
 	set_body_led(0);
 	init_position_direction();
@@ -291,8 +304,9 @@ void avoid_obstacle(void){
 	if(position_direction.desired_direction==LEFT){
 		position_direction.futur_direction=LEFT;
 		//position_direction.progression=0; faut pas on doit pouvoir retirer au move_forward qui vient après avoir contourné une fois avant sur la branche si deux obstacles
-		change_direction();//ici chelou
+
 		move_turn(90,VITESSE);//first turn to be parallel
+		change_direction();//ici chelou
 					if(position_direction.current_direction==UP){set_led(LED1,100);}
 					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
 					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
@@ -305,29 +319,40 @@ void avoid_obstacle(void){
 		position_direction.digression= left_motor_get_pos(); //retient distance d'eloignement
 		//change_direction(); pourquoi c'est là on n'a pas tourné?
 		move_forward(EPUCK_RADIUS*1.5,VITESSE); //advance to not hit the wall
+
+		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+
 		position_direction.futur_direction=RIGHT;
-		change_direction();
 		move_turn(90,-VITESSE);//turn to be perpendicular to the obstacle
+		change_direction();
+
+		motor_reboot();
 					if(position_direction.current_direction==UP){set_body_led(1);}
 					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
 					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
 					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
 		move_forward(EPUCK_RADIUS*2,VITESSE); //go back up next to the obstacle
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//saves these 2 radii to progression
+
+		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+
 		motor_reboot();//not to add radius*2 again//on veut garder ce qu'on a avancé pour le soustraire à la fin
 //-----------------------side--------------------------------------
 		move(VITESSE);
 		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE/2){
-
 		}
 		halt();
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//juste si move fait bien compter les tours de moteur
 		move_forward(EPUCK_RADIUS,VITESSE); //advance to not hit the wall
+
+		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//maintenant on a tout ce dont on a avancé
 		//update_coordinate(position_direction.progression); //updated par move forward, fait plus de sens
 		position_direction.futur_direction=RIGHT;
-		change_direction();
 		move_turn(90,-VITESSE);
+		change_direction();
+		motor_reboot();
 					if(position_direction.current_direction==UP){set_led(LED1,100);}
 					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
 					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
@@ -337,9 +362,12 @@ void avoid_obstacle(void){
 		set_led(LED7,100);
 		set_body_led(0);
 		move_forward(position_direction.digression*WHEEL_PERIMETER*CORRECTION_FORWARD/STEPS_WHEEL_TURN ,VITESSE);//this is weird
+
+		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+
 		position_direction.futur_direction=LEFT;
-		change_direction();
 		move_turn(90,VITESSE);
+		change_direction();
 					if(position_direction.current_direction==UP){set_led(LED1,100);}
 					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
 					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
@@ -410,8 +438,9 @@ void move_forward(float distance, float speed)
 
 	move(speed);
 
-	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
+	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING) && (position_direction.flee==NO)){
 		chThdSleepMilliseconds(10);
+		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 	}
 	halt();
 //	if(position_direction.status==AVOIDING){
@@ -420,7 +449,6 @@ void move_forward(float distance, float speed)
 //	}
 //	else{
 		//position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN; non car se fait changer par tout le monde baah
-		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
 //	}
 
 }
