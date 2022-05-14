@@ -170,7 +170,7 @@ void RTH(void){ //retourner en zone "sure"
 	//move_forward(abs(position_direction.current_position[1]*CORRECTION_FORWARD),VITESSE); Peut plus a cause de la condition flee==no
 	motor_reboot();
 	move(VITESSE+2);
-	while ((right_motor_get_pos() < abs(position_direction.current_position[0])) && (position_direction.status==CRUISING)){
+	while ((right_motor_get_pos() < abs(position_direction.current_position[0])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
 		chThdSleepMilliseconds(10);
 	}
 	halt();
@@ -179,7 +179,7 @@ void RTH(void){ //retourner en zone "sure"
 
 	motor_reboot();
 	move(VITESSE+2);
-	while ((right_motor_get_pos() < abs(position_direction.current_position[1])) && (position_direction.status==CRUISING)){
+	while ((right_motor_get_pos() < abs(position_direction.current_position[1])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
 		chThdSleepMilliseconds(10);
 	}
 	halt();
@@ -224,7 +224,7 @@ void rotate_right_direction_y(void){
 }
 
 
-void rotate_right_direction_x(void){
+void rotate_right_direction_x(void){ //rajoute des criteres
 	if (position_direction.current_position[0]>0){
 		if(position_direction.current_direction==UP)move_turn(90,VITESSE);
 		else move_turn(90,-VITESSE);
@@ -320,7 +320,7 @@ void avoid_obstacle(void){
 		//change_direction(); pourquoi c'est là on n'a pas tourné?
 		move_forward(EPUCK_RADIUS*1.5,VITESSE); //advance to not hit the wall
 
-		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+		update_coordinate((left_motor_get_pos()+position_direction.digression)*WHEEL_PERIMETER /STEPS_WHEEL_TURN); //
 
 		position_direction.futur_direction=RIGHT;
 		move_turn(90,-VITESSE);//turn to be perpendicular to the obstacle
@@ -334,7 +334,7 @@ void avoid_obstacle(void){
 		move_forward(EPUCK_RADIUS*2,VITESSE); //go back up next to the obstacle
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//saves these 2 radii to progression
 
-		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/ STEPS_WHEEL_TURN); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
 
 		motor_reboot();//not to add radius*2 again//on veut garder ce qu'on a avancé pour le soustraire à la fin
 //-----------------------side--------------------------------------
@@ -343,9 +343,12 @@ void avoid_obstacle(void){
 		}
 		halt();
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//juste si move fait bien compter les tours de moteur
+
+		update_coordinate(position_direction.progression);
+
 		move_forward(EPUCK_RADIUS,VITESSE); //advance to not hit the wall
 
-		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+		update_coordinate(left_motor_get_pos() *WHEEL_PERIMETER/ STEPS_WHEEL_TURN); //
 
 		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//maintenant on a tout ce dont on a avancé
 		//update_coordinate(position_direction.progression); //updated par move forward, fait plus de sens
@@ -358,12 +361,15 @@ void avoid_obstacle(void){
 					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
 					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
 		move_forward(EPUCK_RADIUS*1.5,VITESSE); //advance to detect smth
+
+		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/ STEPS_WHEEL_TURN);
+
 //----------------come back on right track--------------------------
 		set_led(LED7,100);
 		set_body_led(0);
 		move_forward(position_direction.digression*WHEEL_PERIMETER*CORRECTION_FORWARD/STEPS_WHEEL_TURN ,VITESSE);//this is weird
 
-		update_coordinate(left_motor_get_pos()); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
+		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/ STEPS_WHEEL_TURN); //
 
 		position_direction.futur_direction=LEFT;
 		move_turn(90,VITESSE);
