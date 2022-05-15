@@ -68,11 +68,4 @@ void set_to_flee (void);
 void go_round_the_inside(void);
 void RTH(void);
 
-
-
-
-//---------------------------------------LEDs--------------------------------------------
-void led_update(void);
-
-
 #endif /* EXPLORE_H*/
