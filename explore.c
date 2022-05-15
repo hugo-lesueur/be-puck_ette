@@ -166,21 +166,21 @@ void is_there_obstacle_left_side(void){
 
 
 void RTH(void){ //retourner en zone "sure"
-	rotate_right_direction_y();
+	rotate_right_direction_y();//looking up or down
 	//move_forward(abs(position_direction.current_position[1]*CORRECTION_FORWARD),VITESSE); Peut plus a cause de la condition flee==no
 	motor_reboot();
 	move(VITESSE+2);
-	while ((right_motor_get_pos() < abs(position_direction.current_position[0])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
+	while ((right_motor_get_pos() < abs(position_direction.current_position[1])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
 		chThdSleepMilliseconds(10);
-	}
+	}//go to y=0
 	halt();
 	rotate_right_direction_x();
 	//move_forward(abs(position_direction.current_position[0]*CORRECTION_FORWARD),VITESSE);
 
 	motor_reboot();
 	move(VITESSE+2);
-	while ((right_motor_get_pos() < abs(position_direction.current_position[1])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
-		chThdSleepMilliseconds(10);
+	while ((right_motor_get_pos() < abs(position_direction.current_position[0])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
+		chThdSleepMilliseconds(10);//go to x=0
 	}
 	halt();
 	clear_leds();
@@ -195,45 +195,45 @@ void RTH(void){ //retourner en zone "sure"
 void rotate_right_direction_y(void){
 	if ((position_direction.current_position[0]>0)&&(position_direction.current_position[1]>0)){
 		if(position_direction.current_direction==UP)move_turn(180,VITESSE);
-		if(position_direction.current_direction==LEFT)move_turn(90,-VITESSE);
-		if(position_direction.current_direction==RIGHT)move_turn(90,VITESSE);
+		if(position_direction.current_direction==LEFT)move_turn(90,VITESSE);//était à l'envers
+		//if(position_direction.current_direction==RIGHT)move_turn(90,VITESSE); //ne devrait jamais arriver
 		position_direction.current_direction=DOWN;
 		return;
 	}
 	if ((position_direction.current_position[0]>0)&&(position_direction.current_position[1]<=0)){
-		if(position_direction.current_direction==DOWN)move_turn(180,VITESSE);
-		if(position_direction.current_direction==LEFT)move_turn(90,VITESSE);
-		if(position_direction.current_direction==RIGHT)move_turn(90,-VITESSE);
+		//if(position_direction.current_direction==UP)move_turn(180,VITESSE);//y avait down à la place ce qui devrait jamais arriver//si up fais rien
+		if(position_direction.current_direction==RIGHT)move_turn(90,VITESSE);
+		//if(position_direction.current_direction==RIGHT)move_turn(90,-VITESSE);//devrait jamais arriver
 		position_direction.current_direction=UP;
 		return;
 	}
 	if ((position_direction.current_position[0]<=0)&&(position_direction.current_position[1]<=0)){
 		if(position_direction.current_direction==DOWN)move_turn(180,VITESSE);
-		if(position_direction.current_direction==LEFT)move_turn(90,-VITESSE);
+		//if(position_direction.current_direction==LEFT)move_turn(90,-VITESSE);//sert à rien
 		if(position_direction.current_direction==RIGHT)move_turn(90,VITESSE);
 		position_direction.current_direction=UP;
 		return;
 	}
 	if ((position_direction.current_position[0]<=0)&&(position_direction.current_position[1]>0)){
-		if(position_direction.current_direction==UP)move_turn(180,VITESSE);
+		//if(position_direction.current_direction==DOWN)move_turn(180,VITESSE);//y avait up à la place if down do rien
 		if(position_direction.current_direction==LEFT)move_turn(90,VITESSE);
-		if(position_direction.current_direction==RIGHT)move_turn(90,-VITESSE);
+		//if(position_direction.current_direction==RIGHT)move_turn(90,-VITESSE);//devrait jamais arriver
 		position_direction.current_direction=DOWN;
 		return;
 	}
 }
 
 
-void rotate_right_direction_x(void){ //rajoute des criteres
+void rotate_right_direction_x(void){ //rajoute des criteres // only is up or down
 	if (position_direction.current_position[0]>0){
 		if(position_direction.current_direction==UP)move_turn(90,VITESSE);
-		else move_turn(90,-VITESSE);
+		if(position_direction.current_direction==DOWN)move_turn(90,-VITESSE);
 		position_direction.current_direction=LEFT;
 		return;
 	}
 	else{
 		if(position_direction.current_direction==UP)move_turn(90,-VITESSE);
-		else move_turn(90,VITESSE);
+		if(position_direction.current_direction==DOWN)move_turn(90,VITESSE);
 		position_direction.current_direction=RIGHT;
 		return;
 	}
@@ -301,86 +301,50 @@ void avoid_obstacle(void){
 
 
 //--------------------------------LEFT SIDE-------------------------------------------
-	if(position_direction.desired_direction==LEFT){
-		position_direction.futur_direction=LEFT;
-		//position_direction.progression=0; faut pas on doit pouvoir retirer au move_forward qui vient après avoir contourné une fois avant sur la branche si deux obstacles
-
-		move_turn(90,VITESSE);//first turn to be parallel
-		change_direction();//ici chelou
-					if(position_direction.current_direction==UP){set_led(LED1,100);}
-					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
-					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
-					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
-		motor_reboot();
-//-------------------------first slide------------------------------
-		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
-			move(VITESSE);//get up to the end of the obstacle
-		}
-		position_direction.digression= left_motor_get_pos(); //retient distance d'eloignement
-		//change_direction(); pourquoi c'est là on n'a pas tourné?
-		move_forward(EPUCK_RADIUS*1.5,VITESSE); //advance to not hit the wall
-
-		update_coordinate((left_motor_get_pos()+position_direction.digression)*WHEEL_PERIMETER /STEPS_WHEEL_TURN); //
-
-		position_direction.futur_direction=RIGHT;
-		move_turn(90,-VITESSE);//turn to be perpendicular to the obstacle
-		change_direction();
-
-		motor_reboot();
-					if(position_direction.current_direction==UP){set_body_led(1);}
-					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
-					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
-					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
-		move_forward(EPUCK_RADIUS*2,VITESSE); //go back up next to the obstacle
-		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//saves these 2 radii to progression
-
-		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/ STEPS_WHEEL_TURN); //* STEPS_WHEEL_TURN / WHEEL_PERIMETER
-
-		motor_reboot();//not to add radius*2 again//on veut garder ce qu'on a avancé pour le soustraire à la fin
-//-----------------------side--------------------------------------
-		move(VITESSE);
-		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE/2){
-		}
-		halt();
-		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//juste si move fait bien compter les tours de moteur
-
-		update_coordinate(position_direction.progression);
-
-		move_forward(EPUCK_RADIUS,VITESSE); //advance to not hit the wall
-
-		update_coordinate(left_motor_get_pos() *WHEEL_PERIMETER/ STEPS_WHEEL_TURN); //
-
-		position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//maintenant on a tout ce dont on a avancé
-		//update_coordinate(position_direction.progression); //updated par move forward, fait plus de sens
-		position_direction.futur_direction=RIGHT;
-		move_turn(90,-VITESSE);
-		change_direction();
-		motor_reboot();
-					if(position_direction.current_direction==UP){set_led(LED1,100);}
-					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
-					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
-					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
-		move_forward(EPUCK_RADIUS*1.5,VITESSE); //advance to detect smth
-
-		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/ STEPS_WHEEL_TURN);
-
-//----------------come back on right track--------------------------
-		set_led(LED7,100);
-		set_body_led(0);
-		move_forward(position_direction.digression*WHEEL_PERIMETER*CORRECTION_FORWARD/STEPS_WHEEL_TURN ,VITESSE);//this is weird
-
-		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/ STEPS_WHEEL_TURN); //
-
+ 	if(position_direction.desired_direction==LEFT){
+//-------------------------------turn to the left-------------------------------------
 		position_direction.futur_direction=LEFT;
 		move_turn(90,VITESSE);
 		change_direction();
-					if(position_direction.current_direction==UP){set_led(LED1,100);}
-					if(position_direction.current_direction==DOWN){set_led(LED1,0);}
-					if(position_direction.current_direction==RIGHT){set_led(LED5,100);}
-					if(position_direction.current_direction==LEFT){set_led(LED5,0);}
+//-------------------------------go to the end of the obstacle------------------------
+		motor_reboot();
+		move(VITESSE);
+		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
+			chThdSleepMilliseconds(10);
+		}
+		position_direction.digression=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;
+		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
+		move_forward(1.5*EPUCK_RADIUS, VITESSE);
+//-------------------------------face back front and avoid-----------------------------
+		position_direction.futur_direction=RIGHT;
+		move_turn(90,-VITESSE);
+		change_direction();
+		move_forward(2*EPUCK_RADIUS, VITESSE);
+		position_direction.progression=position_direction.progression+left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;
+		motor_reboot();
+		move(VITESSE);
+		while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE/2){
+			chThdSleepMilliseconds(10);
+		};
+		position_direction.progression=position_direction.progression+left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;
+		update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
+		move_forward(EPUCK_RADIUS, VITESSE);
+		position_direction.progression=position_direction.progression+left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;
+
+//-------------------------------go back to spiral trajectory-------------------------
+		position_direction.futur_direction=RIGHT;
+		move_turn(90,-VITESSE);
+		change_direction();
+		move_forward(1.5*EPUCK_RADIUS,VITESSE);
+		move_forward(position_direction.digression,VITESSE);
+//-------------------------------get back to spiral orientation-----------------------
+		position_direction.futur_direction=LEFT;
+		move_turn(90,VITESSE);
+		change_direction();
+
 		position_direction.status=CRUISING;
 		position_direction.digression=0;
-	}
+ 	}
 
 }
 
@@ -444,19 +408,12 @@ void move_forward(float distance, float speed)
 
 	move(speed);
 
-	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING) && (position_direction.flee==NO)){
+	while ((right_motor_get_pos() < distance* STEPS_WHEEL_TURN / WHEEL_PERIMETER)/* && (position_direction.status==CRUISING) && (position_direction.flee==NO)*/){
 		chThdSleepMilliseconds(10);
 	}
 	halt();
 
 	update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
-//	if(position_direction.status==AVOIDING){
-//		update_coordinate(right_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
-//		go_round_the_inside();
-//	}
-//	else{
-		//position_direction.progression+=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN; non car se fait changer par tout le monde baah
-//	}
 
 }
 

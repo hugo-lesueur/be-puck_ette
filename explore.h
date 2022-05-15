@@ -9,8 +9,8 @@
 #define RIGHT_SIDE        2
 #define LEFT_SIDE         5
 #define OBSTACLE_DISTANCE 150
-#define CORRECTION_FACTOR 1.31    // correct the angle of rotation to be more precise
-#define CORRECTION_FORWARD 0.95  //correct the distance
+#define CORRECTION_FACTOR 1.296    // correct the angle of rotation to be more precise
+#define CORRECTION_FORWARD /*0.95*/ 1 //correct the distance
 #define VITESSE 8
 
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]
