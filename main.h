@@ -5,6 +5,25 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "ch.h"
+#include "hal.h"
+#include "memory_protection.h"
+#include <usbcfg.h>
+#include <motors.h>
+#include <audio/microphone.h>
+#include <react.h>
+#include <fft.h>
+#include <arm_math.h>
+#include "explore.h"
+#include "react.h"
+#include <leds.h>
+#include "sdio.h"
+#include "sensors/proximity.h"
+#include "spi_comm.h"
+#include "usbcfg.h"
 #include "camera/dcmi_camera.h"
 #include "msgbus/messagebus.h"
 #include "parameter/parameter.h"

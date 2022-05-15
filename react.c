@@ -1,17 +1,4 @@
-//#include "ch.h"
-//#include "hal.h"
-//#include <main.h>
-//#include <usbcfg.h>
-//#include <chprintf.h>
-//#include "leds.h"
-//#include <motors.h>
-//#include <audio/microphone.h>
-//#include <audio_processing.h>
-//#include <communications.h>
-//#include <fft.h>
-//#include <arm_math.h>
-#include "react.h"
-#include "explore.h"
+#include <react.h>
 
 //semaphore
 static BSEMAPHORE_DECL(sendToComputer_sem, TRUE);

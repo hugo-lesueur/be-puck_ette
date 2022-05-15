@@ -1,18 +1,16 @@
 #ifndef REACT_H
 #define REACT_H
-#include "ch.h"
-#include "hal.h"
+
+
 #include <main.h>
-#include <usbcfg.h>
-#include <chprintf.h>
 #include "leds.h"
-#include <motors.h>
 #include <audio/microphone.h>
 #include <audio_processing.h>
-#include <communications.h>
 #include <fft.h>
 #include <arm_math.h>
 #include "explore.h"
+#include "react.h"
+
 
 void processAudioData(int16_t *data, uint16_t num_samples);
 
