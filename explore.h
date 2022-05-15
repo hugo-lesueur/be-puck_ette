@@ -30,7 +30,7 @@
 #define FULL_TURN_DEGREES 360.0f                 // degrees for a whole revolution
 #define STEPS_WHEEL_TURN  1000					 //number of steps per wheel revolution
 #define EPUCK_RADIUS      4     				 //cm
-
+#define ERROR_POS_RTH 	5
 
 
 
@@ -41,9 +41,6 @@ void init_position_direction(void);
 
 //---------------------------------Detection---------------------------------------------
 void is_there_obstacle_ahead(void);
-void is_there_obstacle_right_side(void);
-void is_there_obstacle_left_side(void);
-
 
 //---------------------------------Movement---------------------------------------------
 void rotate_right_direction_y(void);
@@ -54,7 +51,6 @@ void motor_reboot(void);
 void move(float speed);
 float get_goal_distance(void);
 void change_direction(void);
-void motor_set_position(float position_r, float position_l, float speed_r, float speed_l);
 void halt (void);
 void move_forward(float distance, float speed);
 void update_coordinate (int32_t distance);
@@ -62,10 +58,9 @@ void update_coordinate (int32_t distance);
 
 //---------------------------------avoid obstacle---------------------------------------------
 void avoid_obstacle(void);
-void set_to_flee (void);
 
 //---------------------------------Return to Home---------------------------------------------
-void go_round_the_inside(void);
 void RTH(void);
+void set_to_flee (void);
 
 #endif /* EXPLORE_H*/

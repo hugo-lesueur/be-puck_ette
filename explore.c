@@ -55,18 +55,18 @@ static THD_FUNCTION(Move, arg) {
 				move_forward((distance_to_walk-position_direction.progression), SPEED);
 				position_direction.action=TURNING;
 			}
-			else if(position_direction.flee!=YES){
+			else{
 				move_turn(90,5);
 				update_direction();
 				position_direction.action=CRUISING;
 				position_direction.progression=0;
 			}
     	}
-    	if((position_direction.status==AVOIDING)) {
-    		go_round_the_inside();
-    	}
     	if ((position_direction.flee==YES) && (position_direction.status==CRUISING)){
-    		RTH();
+			RTH();
+		}
+    	if(position_direction.status==AVOIDING) {
+    		avoid_obstacle();
     	}
     }
 }
@@ -116,36 +116,14 @@ void is_there_obstacle_ahead(void){
 		}
 	}
 
-
-void is_there_obstacle_right_side(void){
-	//look if we have something on the right side, change position_direction.right_side_state if we detect an obstacle
-	 if (get_prox(RIGHT_SIDE) > OBSTACLE_DISTANCE) {
-		 position_direction.way_right_side_state=JAMMED;
-	    }
-		else {
-			position_direction.way_right_side_state=FREE;
-		}
-}
-
-
-void is_there_obstacle_left_side(void){
-	//look if we have something on the left side, change position_direction.way_left_side_state if we detect an obstacle
-	 if (get_prox(LEFT_SIDE) > OBSTACLE_DISTANCE) {
-		 position_direction.way_left_side_state=JAMMED;
-	    }
-		else {
-			position_direction.way_left_side_state=FREE;
-		}
-	}
-
-
 void RTH(void){ //return in the middle of the spirale
 	rotate_right_direction_y();//looking up or down
 	motor_reboot();
 	move(SPEED+2);
 	while ((right_motor_get_pos() < abs(position_direction.current_position[1])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
 		chThdSleepMilliseconds(10);
-	}//go to y=0
+		}
+	//go to y=0
 	halt();
 	rotate_right_direction_x();
 
@@ -153,12 +131,14 @@ void RTH(void){ //return in the middle of the spirale
 	move(SPEED+2);
 	while ((right_motor_get_pos() < abs(position_direction.current_position[0])* STEPS_WHEEL_TURN / WHEEL_PERIMETER) && (position_direction.status==CRUISING)){
 		chThdSleepMilliseconds(10);//go to x=0
+		}
+	if ((position_direction.status==CRUISING)){
+		halt();
+		clear_leds();
+		set_body_led(0);
+		chThdSleepSeconds(5);
+		init_position_direction();
 	}
-	halt();
-	clear_leds();
-	set_body_led(0);
-	chThdSleepSeconds(5);
-	init_position_direction();
 	return;
 }
 
@@ -206,30 +186,10 @@ void rotate_right_direction_x(void){ // only is up or down
 }
 
 
-void go_round_the_inside(void){			  //avoid obstacle
-	position_direction.progression=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//keep in mind what we have already walked so we
-	//don't walk it twice
-	is_there_obstacle_left_side();
-	if(position_direction.way_left_side_state==FREE){
-		position_direction.desired_direction=LEFT;
-		avoid_obstacle();
-		return;
-	}
-	is_there_obstacle_right_side();
-	if(position_direction.way_right_side_state==FREE){
-		position_direction.desired_direction=RIGHT;
-		avoid_obstacle();
-		return;
-	}
-	is_there_obstacle_ahead();
-	if(position_direction.way_ahead_state==FREE){
-		move_forward(3,SPEED);
-		return;
-	}
-}
+
 
 void avoid_obstacle(void){
-
+	position_direction.progression=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;//keep in mind what we have already walked so we
 
 //-------------------------------turn to the left-------------------------------------
 	position_direction.future_direction=LEFT;
