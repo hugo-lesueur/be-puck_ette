@@ -20,8 +20,8 @@
 #define FRONT_RIGHT       0
 #define RIGHT_SIDE        2
 #define LEFT_SIDE         5
-#define OBSTACLE_DISTANCE 150
-#define CORRECTION_FACTOR 1.296    // correct the angle of rotation to be more precise
+#define OBSTACLE_DISTANCE 300
+#define CORRECTION_FACTOR 1.291    // correct the angle of rotation to be more precise
 #define CORRECTION_FORWARD /*0.95*/ 1 //correct the distance
 #define SPEED 8
 #define WHEEL_AXIS_WIDTH  5.35f                  //[cm]

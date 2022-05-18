@@ -198,12 +198,12 @@ void avoid_obstacle(void){
 //-------------------------------go to the end of the obstacle------------------------
 	motor_reboot();
 	move(SPEED);
-	while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE){
+	while(get_prox(RIGHT_SIDE)>OBSTACLE_DISTANCE/2){
 		chThdSleepMilliseconds(10);
 	}
 	position_direction.digression=left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN;
 	update_coordinate(left_motor_get_pos()*WHEEL_PERIMETER/STEPS_WHEEL_TURN);
-	move_forward(1.5*EPUCK_RADIUS, SPEED);
+	move_forward(1.2*EPUCK_RADIUS, SPEED);
 //-------------------------------face back front and avoid-----------------------------
 	position_direction.future_direction=RIGHT;
 	move_turn(90,-SPEED);
